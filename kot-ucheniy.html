@@ -1,0 +1,3545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Кот Учёный — v15</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app" id="app">
+        <div class="header math-header" id="headerBar">
+            <div class="header-top">
+                <div class="header-left">
+                    <div class="cat-avatar" id="catAvatar">🐱</div>
+                    <div class="header-app-name">Кот Учёный</div>
+                </div>
+                <div class="header-stats">
+                    <div class="stat"><span>🔥</span><span id="streakCount">7</span></div>
+                    <div class="stat"><span>💎</span><span id="gemCount">245</span></div>
+                </div>
+            </div>
+            <div class="subject-switch">
+                <button class="subject-btn active" id="btnMath"><span>🧮</span>Математика</button>
+                <button class="subject-btn" id="btnRus"><span>📝</span>Русский</button>
+            </div>
+        </div>
+
+        <div class="cat-stage math-stage" id="catStage">
+            <div class="cat-speech-bubble" id="catSpeech">Мур! Всё работает!</div>
+            <div class="cat-emoji" id="catBody">🐱</div>
+        </div>
+
+        <div class="main-content">
+            <div class="section-title"><span>🌳</span>Дерево навыков</div>
+            <div id="skillTree"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn active" id="navHome"><span class="nav-icon">🏠</span>Главная</button>
+            <button class="nav-btn" id="navStories"><span class="nav-icon">📖</span>Истории</button>
+            <button class="nav-btn" id="navTraps" style="position:relative;">
+                <span class="nav-icon">🪤</span>Ловушки
+                <span class="nav-badge" id="trapsBadge" style="display:none;">0</span>
+            </button>
+            <button class="nav-btn" id="navProfile"><span class="nav-icon">👤</span>Профиль</button>
+        </div>
+
+        <!-- ПАНЕЛИ ВНУТРИ APP -->
+        <div class="panel-overlay" id="storyPanel">
+            <div class="panel-card">
+                <div class="panel-title">📖 Истории</div>
+                <div class="panel-subtitle" id="storyPanelSubtitle"></div>
+                <div id="storyList"></div>
+                <button class="panel-close" id="btnStoryPanelClose">Закрыть</button>
+            </div>
+        </div>
+        <div class="panel-overlay" id="trapsPanel">
+            <div class="panel-card">
+                <div class="panel-title">🪤 Ловушки</div>
+                <div class="panel-subtitle" id="trapsSubtitle"></div>
+                <div id="trapsList"></div>
+                <button class="panel-close" id="btnTrapsPanelClose">Закрыть</button>
+            </div>
+        </div>
+        <div class="panel-overlay" id="profilePanel">
+            <div class="panel-card">
+                <div id="profileContent"></div>
+                <button class="panel-close" id="btnProfilePanelClose">Закрыть</button>
+            </div>
+        </div>
+        <div class="panel-overlay" id="trapQuizOverlay">
+            <div class="panel-card" id="trapQuizCard"></div>
+        </div>
+    </div>
+
+    <!-- ТОСТЫ И УРОКИ (ПОВЕРХ ВСЕГО) -->
+    <div class="toast" id="toast"></div>
+    <div class="achievement-toast" id="achToast">
+        <span style="font-size:24px;">🏆</span><span id="achToastText"></span>
+    </div>
+
+    <div class="lesson-overlay" id="lessonOverlay">
+        <div class="lesson-container math-lesson" id="lessonContainer">
+            <div class="lesson-progress-wrapper" id="lessonProgressWrapper">
+                <div class="lesson-progress-bar" id="lessonProgressBar"></div>
+            </div>
+            <div class="lesson-header math-bar" id="lessonHeader">
+                <span class="lesson-title" id="lessonTitle">📚</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="lesson-steps" id="lessonSteps"></div>
+                    <button class="lesson-close" id="lessonCloseBtn">✕</button>
+                </div>
+            </div>
+            <div class="lesson-scene" id="lessonScene"></div>
+            <button class="lesson-next math-next" id="lessonNextBtn">Далее ▸</button>
+            <div class="lesson-finish" id="lessonFinishBlock">
+                <div class="finish-emoji">🎉</div>
+                <div class="finish-title" id="lfinishTitle">Урок пройден!</div>
+                <div class="finish-xp" id="lfinishXP"></div>
+                <div class="finish-subtitle" id="lfinishSubtitle"></div>
+                <div class="finish-stats">
+                    <div class="finish-stat">
+                        <div class="finish-stat-val" style="color:var(--green);" id="lfinishCorrect">0</div>
+                        <div class="finish-stat-label">Верно</div>
+                    </div>
+                    <div class="finish-stat">
+                        <div class="finish-stat-val" style="color:var(--red);" id="lfinishWrong">0</div>
+                        <div class="finish-stat-label">Ошибок</div>
+                    </div>
+                </div>
+                <button class="btn-lesson-finish math-finish" id="btnLessonFinish">Завершить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="story-overlay" id="storyOverlay">
+        <div class="story-container math-story" id="storyContainer">
+            <div class="story-header-bar math-bar" id="storyHeaderBar">
+                <span class="story-title-header" id="storyTitleHeader">🕵️</span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="story-steps" id="storySteps"></div>
+                    <button class="story-close-btn" id="storyCloseBtn">✕</button>
+                </div>
+            </div>
+            <div class="story-scene" id="storyScene"></div>
+            <button class="story-next-btn math-next" id="storyNextBtn">Далее ▸</button>
+            <div class="story-finish" id="storyFinishBlock2">
+                <div class="finish-emoji">🏆</div>
+                <div class="finish-title" id="finishTitle"></div>
+                <div class="finish-xp" id="finishXP"></div>
+                <div class="finish-subtitle" id="finishSubtitle"></div>
+                <button class="btn-finish-story math-finish" id="btnFinishStory">Завершить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <div class="tutorial-card">
+            <div class="tutorial-emoji" id="tutEmoji">🐱</div>
+            <div class="tutorial-title" id="tutTitle"></div>
+            <div class="tutorial-text" id="tutText"></div>
+            <div class="tutorial-dots" id="tutDots"></div>
+            <button class="tutorial-btn" id="tutNext">Далее</button>
+            <button class="tutorial-skip" id="tutSkip">Пропустить</button>
+        </div>
+    </div>
+
+    <script>
+/* === js/utils.js === */
+const $ = (selector, parent = document) => parent.querySelector(selector);
+const $$ = (selector, parent = document) => parent.querySelectorAll(selector);
+
+const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+const shuffle = (arr) => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+};
+
+const showToast = (emoji, message, toastEl) => {
+    if (!toastEl) return;
+    toastEl.innerHTML = `<span>${emoji}</span> ${message}`;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._tid);
+    toastEl._tid = setTimeout(() => toastEl.classList.remove('show'), 2000);
+};
+
+const makeWrongs = (correct, count = 3) => {
+    const wrongs = new Set();
+    while (wrongs.size < count) {
+        let delta;
+        if (correct <= 10) delta = rnd(-3, 3);
+        else if (correct <= 50) delta = rnd(-Math.floor(correct * 0.3), Math.floor(correct * 0.3));
+        else delta = rnd(-Math.floor(correct * 0.2), Math.floor(correct * 0.2));
+        const candidate = correct + delta;
+        if (candidate !== correct && candidate >= 0 && !wrongs.has(candidate)) wrongs.add(candidate);
+    }
+    return [...wrongs];
+};
+
+/** Создать неправильные варианты из пула (для русского) */
+const makeStringWrongs = (correct, pool, count = 3) => {
+    const others = [...new Set(pool.filter(x => x !== correct))];
+    const shuf = shuffle(others);
+    return shuf.slice(0, Math.min(count, shuf.length));
+};
+
+const choiceT = (emoji, badge, badgeClass, question, correct, explanation) => {
+    const allOptions = [correct, ...makeWrongs(correct)];
+    const options = shuffle(allOptions);
+    const correctIdx = options.findIndex(opt => opt === correct);
+    return { type: 'choice', emoji, badge, badgeClass, question, options, correctIdx, correctAns: correct, explanation };
+};
+
+/** choice с заранее заданными вариантами (для строк) */
+const choiceStrT = (emoji, badge, badgeClass, question, correct, wrongPool, count, explanation) => {
+    const wrongs = makeStringWrongs(correct, wrongPool, count);
+    const allOptions = shuffle([correct, ...wrongs]);
+    const correctIdx = allOptions.findIndex(opt => opt === correct);
+    return { type: 'choice', emoji, badge, badgeClass, question, options: allOptions, correctIdx, correctAns: correct, explanation };
+};
+
+const inputT = (emoji, badge, badgeClass, question, correct, explanation) => {
+    return { type: 'input', emoji, badge, badgeClass, question, correctAns: correct, explanation };
+};
+
+const pairT = (emoji, badge, badgeClass, question, pairs, explanation) => {
+    return { type: 'pair', emoji, badge, badgeClass, question, pairs, explanation };
+};
+
+/** Визуальное задание: SVG + выбор ответа */
+const visualT = (emoji, badge, badgeClass, svg, question, correct, options, explanation) => {
+    // Гарантируем, что правильный ответ есть среди вариантов
+    const allOpts = options.includes(correct) ? options : [correct, ...options];
+    const uniqueOpts = [...new Set(allOpts)];
+    const correctIdx = uniqueOpts.findIndex(opt => opt === correct);
+    return { type: 'visual', emoji, badge, badgeClass, svg, question, options: uniqueOpts, correctIdx, correctAns: correct, explanation };
+};
+
+/* === js/config.js === */
+const STORAGE_KEY = 'kot_ucheniy_v15';
+const TUTORIAL_KEY = 'kot_ucheniy_tutorial_done';
+
+const SUBJECTS = { MATH: 'math', RUSSIAN: 'russian' };
+
+const GEMS = {
+    CORRECT_ANSWER: 5, LESSON_XP_PER_CORRECT: 5, LESSON_PERFECT_BONUS: 25,
+    BONUS_REPEAT_XP: 3, ACHIEVEMENT_REWARD: 15, TRAP_BASE_REWARD: 5,
+    TRAP_DEFUSE_MULTIPLIER: 3, STORY_MATH_REWARD: 40, STORY_RUS_REWARD: 50
+};
+
+const TRAP = { MAX_DEFUSES: 1, DELAY_SLOTS: [1, 3, 7, 14] };
+const SKILL = { PROGRESS_TO_COMPLETE: 100 };
+
+const ACHIEVEMENTS_DEF = {
+    detective:  { name: '🕵️ Детектив',   desc: 'Пройти 1 историю',        unlocked: false },
+    sherlock:   { name: '🔍 Шерлок',      desc: 'Пройти 2 истории',        unlocked: false },
+    holmes:     { name: '🎩 Холмс',       desc: 'Пройти 3 истории',        unlocked: false },
+    saper:      { name: '🪤 Сапёр',       desc: 'Обезвредить ловушку',     unlocked: false },
+    hunter:     { name: '💣 Охотник',     desc: 'Обезвредить 3',           unlocked: false },
+    murmur:     { name: '🐱 Мур-мур',     desc: 'Погладить 10 раз',        unlocked: false },
+    erudite:    { name: '📚 Эрудит',      desc: 'Переключить предмет 5 раз', unlocked: false },
+    firstBlood: { name: '💎 Первая кровь',desc: 'Ошибка → ловушки',        unlocked: false },
+    student:    { name: '🎓 Ученик',      desc: 'Пройти 1 урок',           unlocked: false },
+    master:     { name: '🏅 Мастер',      desc: 'Урок без ошибок',         unlocked: false }
+};
+
+const MATH_SKILLS = [
+    { id: 'add',  name: 'Сложение',           icon: '➕', color: '#3B82F6', progress: 0, status: 'current' },
+    { id: 'sub',  name: 'Вычитание',          icon: '➖', color: '#EF4444', progress: 0, status: 'locked' },
+    { id: 'mul',  name: 'Умножение',          icon: '✖️', color: '#F59E0B', progress: 0, status: 'locked' },
+    { id: 'div',  name: 'Деление',            icon: '➗', color: '#8B5CF6', progress: 0, status: 'locked' },
+    { id: 'eq',   name: 'Уравнения',          icon: '🔎', color: '#EC4899', progress: 0, status: 'locked' },
+    { id: 'geom', name: 'Периметр и площадь', icon: '📏', color: '#14B8A6', progress: 0, status: 'locked' },
+    { id: 'frac', name: 'Дроби',             icon: '🍕', color: '#F97316', progress: 0, status: 'locked' }
+];
+
+const RUS_SKILLS = [
+    { id: 'zhishi',  name: 'ЖИ/ШИ, ЧА/ЩА, ЧУ/ЩУ',  icon: '✍️',  color: '#7C3AED', progress: 0, status: 'current' },
+    { id: 'soft',    name: 'Разделительный Ь и Ъ',   icon: '🧩', color: '#8B5CF6', progress: 0, status: 'locked' },
+    { id: 'vowel',   name: 'Безударные гласные',     icon: '🔎', color: '#F59E0B', progress: 0, status: 'locked' },
+    { id: 'silent',  name: 'Непроизносимые согласные',icon: '🗣️', color: '#EC4899', progress: 0, status: 'locked' },
+    { id: 'tsya',    name: '-ТСЯ/-ТЬСЯ',             icon: '🔄', color: '#14B8A6', progress: 0, status: 'locked' },
+    { id: 'prepri',  name: 'ПРЕ/ПРИ',                icon: '🎯', color: '#F97316', progress: 0, status: 'locked' },
+    { id: 'nn',      name: 'Н и НН',                 icon: '📋', color: '#EF4444', progress: 0, status: 'locked' }
+];
+
+const CAT_SPEECH = {
+    math: 'Мур! Математика!',
+    russian: 'Мур! Русский язык!',
+    pet: (count) => count >= 10 ? 'Мур-мур! 💖' : 'Мррр!',
+    lessonPerfect: 'Мур! Идеально! 🌟',
+    lessonDone: 'Мур! Ошибки в ловушках 🪤',
+    storyDone: 'Мур! Дело раскрыто! 🏆'
+};
+
+const SUBJECT_EMOJI = { math: '🐱', russian: '😺' };
+
+const DEFAULT_THEME = 'light';
+
+const THEMES = {
+    light: {
+        id: 'light', name: '☀️ Солнечная', catEmoji: '🐱',
+        bg: '#F8FAFC', card: '#FFFFFF', text: '#1E293B', textLight: '#94A3B8',
+        primary: '#3B82F6', accent: '#F59E0B',
+        gradient: 'linear-gradient(135deg, #E2E8F0 0%, #F1F5F9 50%, #E8EDF2 100%)',
+        bgEffect: 'sunlight', unlocked: true
+    },
+    dark: {
+        id: 'dark', name: '🌙 Ночная', catEmoji: '🐱',
+        bg: '#0F172A', card: '#1E293B', text: '#F1F5F9', textLight: '#94A3B8',
+        primary: '#818CF8', accent: '#FBBF24',
+        gradient: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+        bgEffect: 'stars', unlocked: true
+    },
+    forest: {
+        id: 'forest', name: '🌲 Лес', catEmoji: '🦊',
+        bg: '#F0FDF4', card: '#FFFFFF', text: '#14532D', textLight: '#65A30D',
+        primary: '#16A34A', accent: '#CA8A04',
+        gradient: 'linear-gradient(135deg, #DCFCE7 0%, #F0FDF4 50%, #ECFCCB 100%)',
+        bgEffect: 'leaves', unlocked: false, unlockAt: 3 // пройти 3 урока
+    },
+    space: {
+        id: 'space', name: '🚀 Космос', catEmoji: '👾',
+        bg: '#0A0A1A', card: '#1A1A3E', text: '#E2E8F0', textLight: '#818CF8',
+        primary: '#A855F7', accent: '#06B6D4',
+        gradient: 'linear-gradient(135deg, #0A0A1A 0%, #1A1A3E 100%)',
+        bgEffect: 'nebula', unlocked: false, unlockAt: 7 // пройти 7 уроков
+    },
+    underwater: {
+        id: 'underwater', name: '🌊 Под водой', catEmoji: '🐠',
+        bg: '#E0F2FE', card: '#FFFFFF', text: '#0C4A6E', textLight: '#0284C7',
+        primary: '#0EA5E9', accent: '#F97316',
+        gradient: 'linear-gradient(135deg, #BAE6FD 0%, #E0F2FE 50%, #7DD3FC 100%)',
+        bgEffect: 'bubbles', unlocked: false, unlockAt: 12 // пройти 12 уроков
+    }
+};
+
+const getTheme = (id) => THEMES[id] || THEMES[DEFAULT_THEME];
+
+/** Сколько уроков пройдено (completed skills) */
+const countCompletedLessons = (skills) => {
+    if (!skills) return 0;
+    return Object.values(skills).filter(s => s && s.progress >= 100).length;
+};
+
+/* === js/sounds.js === */
+// js/sounds.js
+
+function getCtx() {
+    try {
+        return new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+        return null;
+    }
+}
+
+function playCorrectSound() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        const o1 = ctx.createOscillator(); const g1 = ctx.createGain();
+        o1.type = 'sine'; o1.frequency.setValueAtTime(523.25, now); o1.frequency.setValueAtTime(659.25, now + 0.08);
+        g1.gain.setValueAtTime(0.25, now); g1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        o1.connect(g1); g1.connect(ctx.destination); o1.start(now); o1.stop(now + 0.3);
+        const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
+        o2.type = 'sine'; o2.frequency.setValueAtTime(659.25, now + 0.1); o2.frequency.setValueAtTime(783.99, now + 0.18);
+        g2.gain.setValueAtTime(0.2, now + 0.1); g2.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+        o2.connect(g2); g2.connect(ctx.destination); o2.start(now + 0.1); o2.stop(now + 0.45);
+    } catch (e) {}
+}
+
+function playWrongSound() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.setValueAtTime(220, now); o.frequency.linearRampToValueAtTime(110, now + 0.35);
+        g.gain.setValueAtTime(0.25, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now + 0.4);
+    } catch (e) {}
+}
+
+function playAchievementSound() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        [523.25, 659.25, 783.99].forEach((f, i) => {
+            const o = ctx.createOscillator(); const g = ctx.createGain();
+            o.type = 'sine'; o.frequency.setValueAtTime(f, now + i * 0.12);
+            g.gain.setValueAtTime(0.22, now + i * 0.12); g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.35);
+            o.connect(g); g.connect(ctx.destination); o.start(now + i * 0.12); o.stop(now + i * 0.12 + 0.35);
+        });
+        [523.25, 659.25, 783.99].forEach(f => {
+            const o = ctx.createOscillator(); const g = ctx.createGain();
+            o.type = 'sine'; o.frequency.setValueAtTime(f, now + 0.5);
+            g.gain.setValueAtTime(0.15, now + 0.5); g.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+            o.connect(g); g.connect(ctx.destination); o.start(now + 0.5); o.stop(now + 0.9);
+        });
+    } catch (e) {}
+}
+
+function playMeowSound() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        // "Мя" — короткий высокий
+        const o1 = ctx.createOscillator(); const g1 = ctx.createGain();
+        o1.type = 'triangle';
+        o1.frequency.setValueAtTime(650, now);
+        o1.frequency.linearRampToValueAtTime(850, now + 0.06);
+        g1.gain.setValueAtTime(0.2, now);
+        g1.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        o1.connect(g1); g1.connect(ctx.destination); o1.start(now); o1.stop(now + 0.15);
+        // "у" — протяжный низкий
+        const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
+        o2.type = 'triangle';
+        o2.frequency.setValueAtTime(450, now + 0.08);
+        o2.frequency.linearRampToValueAtTime(320, now + 0.35);
+        g2.gain.setValueAtTime(0.14, now + 0.08);
+        g2.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        o2.connect(g2); g2.connect(ctx.destination); o2.start(now + 0.08); o2.stop(now + 0.4);
+    } catch (e) {}
+}
+
+function spawnConfetti() {
+    const c = document.createElement('div'); c.className = 'confetti-container'; document.body.appendChild(c);
+    const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+    for (let i = 0; i < 12; i++) {
+        const p = document.createElement('span'); p.className = 'confetti-piece'; p.textContent = '●';
+        p.style.left = Math.random() * 100 + '%'; p.style.top = -(Math.random() * 100) + 'px';
+        p.style.color = colors[Math.floor(Math.random() * colors.length)];
+        p.style.fontSize = (Math.random() * 10 + 6) + 'px';
+        p.style.animationDelay = Math.random() * 0.3 + 's';
+        p.style.animationDuration = (Math.random() * 0.4 + 0.5) + 's';
+        c.appendChild(p);
+    }
+    setTimeout(() => c.remove(), 1200);
+}
+
+function spawnLeaves() {
+    const c = document.createElement('div'); c.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000;';
+    document.body.appendChild(c);
+    const leaves = ['🍃', '🌿', '🍂', '🍁', '🌱', '✨'];
+    for (let i = 0; i < 20; i++) {
+        const l = document.createElement('span'); l.className = 'leaf-particle'; l.textContent = leaves[Math.floor(Math.random() * leaves.length)];
+        l.style.left = Math.random() * 100 + '%'; l.style.top = -(Math.random() * 50) + 'px';
+        l.style.fontSize = (Math.random() * 16 + 10) + 'px';
+        l.style.animationDelay = Math.random() * 0.8 + 's';
+        l.style.animationDuration = (Math.random() * 1.5 + 2) + 's';
+        c.appendChild(l);
+    }
+    setTimeout(() => c.remove(), 3500);
+}
+
+function spawnGems(count, startX, startY, targetEl) {
+    const target = targetEl || document.getElementById('gemCount');
+    if (!target) return;
+    const targetRect = target.getBoundingClientRect();
+    const targetX = targetRect.left + targetRect.width / 2;
+    const targetY = targetRect.top + targetRect.height / 2;
+    for (let i = 0; i < count; i++) {
+        const gem = document.createElement('span');
+        gem.textContent = '💎';
+        gem.style.cssText = `position:fixed;left:${startX}px;top:${startY}px;font-size:16px;pointer-events:none;z-index:1000;transition:all 0.8s;opacity:1;`;
+        document.body.appendChild(gem);
+        requestAnimationFrame(() => {
+            gem.style.left = targetX + 'px';
+            gem.style.top = targetY + 'px';
+            gem.style.opacity = '0';
+            gem.style.transform = 'scale(0.3)';
+        });
+        setTimeout(() => gem.remove(), 900);
+    }
+}
+
+/** Звуковые пресеты для тем */
+const THEME_SOUNDS = {
+    forest: {
+        correct: () => playXylophone([523, 659, 784]),
+        wrong: () => playWoodThump(),
+        achievement: () => playXylophone([392, 523, 659, 784], 0.15)
+    },
+    space: {
+        correct: () => playSynthChime(),
+        wrong: () => playAlienBuzz(),
+        achievement: () => playSynthArpeggio()
+    },
+    underwater: {
+        correct: () => playBubblePop(),
+        wrong: () => playSplash(),
+        achievement: () => playBubbleMelody()
+    }
+};
+
+function playXylophone(notes, delay = 0.12) {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        notes.forEach((f, i) => {
+            const o = ctx.createOscillator(); const g = ctx.createGain();
+            o.type = 'triangle'; o.frequency.setValueAtTime(f, now + i * delay);
+            g.gain.setValueAtTime(0.2, now + i * delay);
+            g.gain.exponentialRampToValueAtTime(0.01, now + i * delay + 0.35);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(now + i * delay); o.stop(now + i * delay + 0.35);
+        });
+    } catch (e) {}
+}
+
+function playWoodThump() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.setValueAtTime(180, now);
+        o.frequency.exponentialRampToValueAtTime(60, now + 0.3);
+        g.gain.setValueAtTime(0.25, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now + 0.35);
+    } catch (e) {}
+}
+
+function playSynthChime() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        [880, 1100, 1320].forEach((f, i) => {
+            const o = ctx.createOscillator(); const g = ctx.createGain();
+            const f1 = ctx.createBiquadFilter();
+            f1.type = 'lowpass'; f1.frequency.value = 3000;
+            o.type = 'sawtooth'; o.frequency.setValueAtTime(f, now + i * 0.08);
+            g.gain.setValueAtTime(0.12, now + i * 0.08);
+            g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.25);
+            o.connect(f1); f1.connect(g); g.connect(ctx.destination);
+            o.start(now + i * 0.08); o.stop(now + i * 0.08 + 0.25);
+        });
+    } catch (e) {}
+}
+
+function playAlienBuzz() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        const f1 = ctx.createBiquadFilter();
+        f1.type = 'lowpass'; f1.frequency.value = 500;
+        o.type = 'square'; o.frequency.setValueAtTime(150, now);
+        o.frequency.linearRampToValueAtTime(80, now + 0.35);
+        g.gain.setValueAtTime(0.12, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        o.connect(f1); f1.connect(g); g.connect(ctx.destination);
+        o.start(now); o.stop(now + 0.4);
+    } catch (e) {}
+}
+
+function playSynthArpeggio() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        [660, 880, 1100, 1320].forEach((f, i) => {
+            const o = ctx.createOscillator(); const g = ctx.createGain();
+            const f1 = ctx.createBiquadFilter();
+            f1.type = 'lowpass'; f1.frequency.value = 3000;
+            o.type = 'sawtooth'; o.frequency.setValueAtTime(f, now + i * 0.12);
+            g.gain.setValueAtTime(0.1, now + i * 0.12);
+            g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.3);
+            o.connect(f1); f1.connect(g); g.connect(ctx.destination);
+            o.start(now + i * 0.12); o.stop(now + i * 0.12 + 0.3);
+        });
+    } catch (e) {}
+}
+
+function playBubblePop() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(400, now);
+        o.frequency.linearRampToValueAtTime(600, now + 0.06);
+        o.frequency.linearRampToValueAtTime(800, now + 0.12);
+        g.gain.setValueAtTime(0.2, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now + 0.25);
+    } catch (e) {}
+}
+
+function playSplash() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.setValueAtTime(180, now);
+        o.frequency.linearRampToValueAtTime(100, now + 0.45);
+        g.gain.setValueAtTime(0.2, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        o.connect(g); g.connect(ctx.destination); o.start(now); o.stop(now + 0.5);
+    } catch (e) {}
+}
+
+function playBubbleMelody() {
+    try {
+        const ctx = getCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        [350, 500, 700, 900].forEach((f, i) => {
+            const o = ctx.createOscillator(); const g = ctx.createGain();
+            o.type = 'sine'; o.frequency.setValueAtTime(f, now + i * 0.15);
+            o.frequency.linearRampToValueAtTime(f * 1.2, now + i * 0.15 + 0.1);
+            g.gain.setValueAtTime(0.15, now + i * 0.15);
+            g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.4);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(now + i * 0.15); o.stop(now + i * 0.15 + 0.4);
+        });
+    } catch (e) {}
+}
+
+function playSound(type, themeId) {
+    const theme = themeId && THEME_SOUNDS[themeId];
+    if (theme && theme[type]) {
+        theme[type]();
+        if (type === 'achievement') spawnConfetti();
+        return;
+    }
+    switch (type) {
+        case 'correct': playCorrectSound(); break;
+        case 'wrong': playWrongSound(); break;
+        case 'achievement': playAchievementSound(); spawnConfetti(); break;
+        case 'pet': playMeowSound(); break;
+        case 'meow': playMeowSound(); break;
+    }
+}
+
+/* === js/state.js === */
+const state = {
+    subject: SUBJECTS.MATH, streak: 7, gems: 245, totalPets: 0,
+    storiesCompleted: { math: false, rus1: false, rus2: false },
+    traps: [],
+    achievements: JSON.parse(JSON.stringify(ACHIEVEMENTS_DEF)),
+    skills: {
+        [SUBJECTS.MATH]: JSON.parse(JSON.stringify(MATH_SKILLS)),
+        [SUBJECTS.RUSSIAN]: JSON.parse(JSON.stringify(RUS_SKILLS))
+    },
+    currentLesson: null, lessonStep: 0, lessonTasks: [], lessonCorrect: 0, lessonWrong: 0, lessonSkillId: null,
+    currentStory: null, storyStep: 0, storyAnswered: false,
+    subjectSwitches: 0,
+    theme: DEFAULT_THEME
+};
+
+const saveState = () => {
+    const data = {
+        skills: state.skills, gems: state.gems, streak: state.streak,
+        storiesCompleted: state.storiesCompleted, traps: state.traps,
+        achievements: state.achievements, totalPets: state.totalPets,
+        subject: state.subject, subjectSwitches: state.subjectSwitches,
+        theme: state.theme
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};
+
+const loadState = () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    try {
+        const data = JSON.parse(saved);
+        if (data.skills) {
+            state.skills[SUBJECTS.MATH] = data.skills[SUBJECTS.MATH] || state.skills[SUBJECTS.MATH];
+            state.skills[SUBJECTS.RUSSIAN] = data.skills[SUBJECTS.RUSSIAN] || state.skills[SUBJECTS.RUSSIAN];
+        }
+        if (data.gems !== undefined) state.gems = data.gems;
+        if (data.streak !== undefined) state.streak = data.streak;
+        if (data.storiesCompleted) state.storiesCompleted = { ...state.storiesCompleted, ...data.storiesCompleted };
+        if (data.traps) state.traps = data.traps;
+        if (data.achievements) Object.keys(data.achievements).forEach(key => {
+            if (state.achievements[key] && data.achievements[key].unlocked) state.achievements[key].unlocked = true;
+        });
+        if (data.totalPets !== undefined) state.totalPets = data.totalPets;
+        if (data.subject) state.subject = data.subject;
+        if (data.subjectSwitches !== undefined) state.subjectSwitches = data.subjectSwitches;
+        if (data.theme) state.theme = data.theme;
+    } catch (e) { console.warn('Ошибка загрузки:', e); }
+};
+
+const getCurrentSkills = () => state.skills[state.subject];
+
+const unlockAchievement = (id, onUnlock) => {
+    const ach = state.achievements[id];
+    if (!ach || ach.unlocked) return false;
+    ach.unlocked = true; state.gems += GEMS.ACHIEVEMENT_REWARD; saveState();
+    if (onUnlock) onUnlock(ach.name, ach.desc);
+    return true;
+};
+
+const checkAchievements = (onUnlock) => {
+    const done = (state.storiesCompleted.math?1:0)+(state.storiesCompleted.rus1?1:0)+(state.storiesCompleted.rus2?1:0);
+    const def = state.traps.reduce((s,t)=>s+t.defuses,0);
+    const checks = {
+        detective: done>=1, sherlock: done>=2, holmes: done>=3,
+        saper: def>=1, hunter: def>=3, murmur: state.totalPets>=10, firstBlood: state.traps.length>0
+    };
+    Object.entries(checks).forEach(([id,cond]) => { if(cond) unlockAchievement(id, onUnlock); });
+};
+
+const getAvailableTraps = () => {
+    return state.traps.filter(t=>t.defuses < TRAP.MAX_DEFUSES && t.subject === state.subject);
+};
+
+const getDefusedTraps = () => state.traps.filter(t=>t.defuses >= TRAP.MAX_DEFUSES && t.subject === state.subject);
+
+const resetAllProgress = () => {
+    state.skills[SUBJECTS.MATH] = JSON.parse(JSON.stringify(MATH_SKILLS));
+    state.skills[SUBJECTS.RUSSIAN] = JSON.parse(JSON.stringify(RUS_SKILLS));
+    state.gems = 245; state.streak = 7; state.totalPets = 0; state.subjectSwitches = 0;
+    state.storiesCompleted = { math: false, rus1: false, rus2: false };
+    state.traps = []; state.achievements = JSON.parse(JSON.stringify(ACHIEVEMENTS_DEF));
+    state.subject = SUBJECTS.MATH;
+    state.theme = DEFAULT_THEME;
+    localStorage.removeItem(STORAGE_KEY);
+    applyTheme(DEFAULT_THEME);
+};
+
+/** Применить тему к body и CSS-переменным */
+const applyTheme = (themeId) => {
+    const t = getTheme(themeId);
+    if (!t) return;
+
+    // Убираем все старые theme-классы
+    Object.keys(THEMES).forEach(k => document.body.classList.remove('theme-' + k));
+    document.body.classList.add('theme-' + themeId);
+
+    // CSS-переменные
+    const root = document.documentElement;
+    root.style.setProperty('--bg', t.bg);
+    root.style.setProperty('--card', t.card);
+    root.style.setProperty('--text', t.text);
+    root.style.setProperty('--text-light', t.textLight);
+    root.style.setProperty('--theme-primary', t.primary);
+    root.style.setProperty('--theme-accent', t.accent);
+
+    // Обновляем фон body
+    document.body.style.background = t.gradient;
+    document.body.style.backgroundSize = '400% 400%';
+
+    // Эмодзи кота
+    const catBody = document.getElementById('catBody');
+    if (catBody) catBody.textContent = t.catEmoji;
+
+    // Сохраняем
+    state.theme = themeId;
+};
+
+/** Проверить и разблокировать темы по прогрессу */
+const checkThemeUnlocks = () => {
+    const totalDone = countCompletedLessons(state.skills[SUBJECTS.MATH]) + countCompletedLessons(state.skills[SUBJECTS.RUSSIAN]);
+    Object.values(THEMES).forEach(t => {
+        if (!t.unlocked && t.unlockAt && totalDone >= t.unlockAt) {
+            t.unlocked = true;
+        }
+    });
+};
+
+/* === js/generators/math.js === */
+// js/generators/math.js
+
+// ═══════════════════════════════════════════════
+//  SVG-заготовки
+// ═══════════════════════════════════════════════
+
+function applesSVG(count, color = '#EF4444') {
+    const rows = Math.ceil(count / 5);
+    const perRow = Math.min(count, 5);
+    let circles = '';
+    for (let r = 0; r < rows; r++) {
+        const inRow = r === rows - 1 ? (count % 5 || 5) : 5;
+        for (let c = 0; c < inRow; c++) {
+            const cx = 20 + c * 28 + (rows > 1 && r === rows - 1 ? (5 - inRow) * 14 : 0);
+            const cy = 25 + r * 32;
+            circles += `<circle cx="${cx}" cy="${cy}" r="11" fill="${color}" stroke="#B91C1C" stroke-width="1.5"/>
+            <line x1="${cx - 4}" y1="${cy - 5}" x2="${cx + 1}" y2="${cy - 9}" stroke="#7F1D1D" stroke-width="2" stroke-linecap="round"/>`;
+        }
+    }
+    const h = Math.max(60, rows * 32 + 16);
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 ${h}" width="150" height="${h}">${circles}</svg>`;
+}
+
+function applesTwoGroups(a, b) {
+    const svgA = applesSVG(a, '#EF4444');
+    const svgB = applesSVG(b, '#F59E0B');
+    // Simple side-by-side via a wrapper div is easier, but for inline SVG we compose
+    const rowsA = Math.ceil(a / 5); const perRowA = Math.min(a, 5);
+    const rowsB = Math.ceil(b / 5); const perRowB = Math.min(b, 5);
+    const H = Math.max(rowsA, rowsB) * 32 + 30;
+    let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 ${H}" width="300" height="${H}">`;
+    // group A label
+    out += `<text x="75" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">🍎 группа А</text>`;
+    for (let r = 0; r < rowsA; r++) {
+        const inRow = r === rowsA - 1 ? (a % 5 || 5) : 5;
+        for (let c = 0; c < inRow; c++) {
+            const cx = 35 + c * 28 + (rowsA > 1 && r === rowsA - 1 ? (5 - inRow) * 14 : 0);
+            const cy = 30 + r * 32;
+            out += `<circle cx="${cx}" cy="${cy}" r="11" fill="#EF4444" stroke="#B91C1C" stroke-width="1.5"/>
+            <line x1="${cx - 4}" y1="${cy - 5}" x2="${cx + 1}" y2="${cy - 9}" stroke="#7F1D1D" stroke-width="2" stroke-linecap="round"/>`;
+        }
+    }
+    // group B label
+    out += `<text x="225" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">🍎 группа Б</text>`;
+    for (let r = 0; r < rowsB; r++) {
+        const inRow = r === rowsB - 1 ? (b % 5 || 5) : 5;
+        for (let c = 0; c < inRow; c++) {
+            const cx = 185 + c * 28 + (rowsB > 1 && r === rowsB - 1 ? (5 - inRow) * 14 : 0);
+            const cy = 30 + r * 32;
+            out += `<circle cx="${cx}" cy="${cy}" r="11" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"/>
+            <line x1="${cx - 4}" y1="${cy - 5}" x2="${cx + 1}" y2="${cy - 9}" stroke="#92400E" stroke-width="2" stroke-linecap="round"/>`;
+        }
+    }
+    out += '</svg>';
+    return out;
+}
+
+function subSVG(total, eaten) {
+    const H = Math.ceil(total / 5) * 32 + 30;
+    let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 ${H}" width="280" height="${H}">`;
+    out += `<text x="140" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">Было ${total} 🍎</text>`;
+    for (let r = 0; r < Math.ceil(total / 5); r++) {
+        const inRow = r === Math.ceil(total / 5) - 1 ? (total % 5 || 5) : 5;
+        for (let c = 0; c < (r < Math.ceil(total / 5) - 1 ? 5 : inRow); c++) {
+            const idx = r * 5 + c;
+            const cx = 40 + c * 36;
+            const cy = 30 + r * 32;
+            const isEaten = idx < eaten;
+            const fill = isEaten ? '#E2E8F0' : '#EF4444';
+            const stroke = isEaten ? '#CBD5E1' : '#B91C1C';
+            out += `<circle cx="${cx}" cy="${cy}" r="11" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-dasharray="${isEaten ? '3 2' : 'none'}"/>`;
+            if (isEaten) {
+                out += `<line x1="${cx - 5}" y1="${cy - 5}" x2="${cx + 5}" y2="${cy + 5}" stroke="#CBD5E1" stroke-width="2"/>
+                <line x1="${cx + 5}" y1="${cy - 5}" x2="${cx - 5}" y2="${cy + 5}" stroke="#CBD5E1" stroke-width="2"/>`;
+            } else {
+                out += `<line x1="${cx - 4}" y1="${cy - 5}" x2="${cx + 1}" y2="${cy - 9}" stroke="#7F1D1D" stroke-width="2" stroke-linecap="round"/>`;
+            }
+        }
+    }
+    out += '</svg>';
+    return out;
+}
+
+function mulGridSVG(rows, cols) {
+    const W = Math.min(300, cols * 36 + 20);
+    const H = rows * 32 + 30;
+    let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+    out += `<text x="${W / 2}" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">${rows} ряда × ${cols} 🍎</text>`;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const cx = 14 + c * (W / cols > 32 ? 32 : W / cols);
+            const cy = 28 + r * 32;
+            const cxc = 14 + c * ((W - 20) / cols) + (W - 20) / cols / 2;
+            if (cols <= 8) {
+                out += `<circle cx="${cxc}" cy="${cy}" r="10" fill="#F59E0B" stroke="#D97706" stroke-width="1.2"/>`;
+                out += `<line x1="${cxc - 3}" y1="${cy - 4}" x2="${cxc + 1}" y2="${cy - 8}" stroke="#92400E" stroke-width="1.8" stroke-linecap="round"/>`;
+            }
+        }
+    }
+    out += '</svg>';
+    return out;
+}
+
+function divBasketsSVG(total, baskets) {
+    const perBasket = Math.floor(total / baskets);
+    const rem = total - perBasket * baskets;
+    const W = baskets * 60 + 20;
+    const H = (perBasket + (rem > 0 ? 1 : 0)) * 22 + 80;
+    let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+    out += `<text x="${W / 2}" y="12" text-anchor="middle" font-size="10" fill="#94A3B8" font-weight="700">${total} 🍎 в ${baskets} корзинах</text>`;
+    for (let b = 0; b < baskets; b++) {
+        const bx = 14 + b * 60;
+        // basket
+        out += `<path d="M${bx} 40 L${bx + 10} ${H - 16} L${bx + 38} ${H - 16} L${bx + 48} 40 Z" fill="#D4A373" stroke="#B8845A" stroke-width="1.5"/>`;
+        // apples in basket
+        const count = b < rem ? perBasket + 1 : perBasket;
+        for (let a = 0; a < count; a++) {
+            const ax = bx + 14 + (a % 3) * 16;
+            const ay = H - 28 - Math.floor(a / 3) * 18;
+            out += `<circle cx="${ax}" cy="${ay}" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="0.8"/>`;
+        }
+    }
+    out += '</svg>';
+    return out;
+}
+
+function eqScaleSVG(leftExpr, rightVal) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 100" width="240" height="100">
+        <polygon points="120,15 135,30 105,30" fill="#94A3B8"/>
+        <line x1="120" y1="30" x2="120" y2="50" stroke="#94A3B8" stroke-width="3"/>
+        <line x1="30" y1="50" x2="210" y2="50" stroke="#64748B" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="120" cy="50" r="4" fill="#64748B"/>
+        <!-- left cup -->
+        <path d="M40 50 L50 70 L90 70 L100 50 Z" fill="#E2E8F0" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="70" y="63" text-anchor="middle" font-size="14" fill="#1E293B" font-weight="800">${leftExpr}</text>
+        <!-- right cup -->
+        <path d="M140 50 L150 70 L190 70 L200 50 Z" fill="#FEF3C7" stroke="#FBBF24" stroke-width="1.5"/>
+        <text x="170" y="63" text-anchor="middle" font-size="14" fill="#92400E" font-weight="800">?</text>
+    </svg>`;
+    return svg;
+}
+
+function geomRectSVG(w, h, label) {
+    const scale = Math.min(200 / w, 120 / h, 30);
+    const rw = w * scale;
+    const rh = h * scale;
+    const W = rw + 40;
+    const H = rh + 50;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+        <rect x="20" y="25" width="${rw}" height="${rh}" fill="#DBEAFE" stroke="#3B82F6" stroke-width="2"/>
+        <text x="${20 + rw / 2}" y="20" text-anchor="middle" font-size="11" fill="#3B82F6" font-weight="700">${w}</text>
+        <text x="${rw + 28}" y="${25 + rh / 2}" font-size="11" fill="#3B82F6" font-weight="700">${h}</text>
+        <text x="${20 + rw / 2}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#3B82F6" font-weight="700">${label}</text>
+    </svg>`;
+    return svg;
+}
+
+function pizzaSVG(eaten, total) {
+    const slices = [];
+    for (let i = 0; i < total; i++) {
+        const fromAngle = (i / total) * 360;
+        const toAngle = ((i + 1) / total) * 360;
+        const fromRad = (fromAngle - 90) * Math.PI / 180;
+        const toRad = (toAngle - 90) * Math.PI / 180;
+        const x1 = 100 + 70 * Math.cos(fromRad);
+        const y1 = 100 + 70 * Math.sin(fromRad);
+        const x2 = 100 + 70 * Math.cos(toRad);
+        const y2 = 100 + 70 * Math.sin(toRad);
+        const eatenSlice = i < eaten;
+        slices.push(`<path d="M100 100 L${x1} ${y1} A70 70 0 0 1 ${x2} ${y2} Z" fill="${eatenSlice ? '#E2E8F0' : '#F59E0B'}" stroke="#92400E" stroke-width="1.5"/>`);
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+        ${slices.join('')}
+        <text x="100" y="190" text-anchor="middle" font-size="12" fill="#94A3B8" font-weight="700">Съедено ${eaten} из ${total}</text>
+    </svg>`;
+    return svg;
+}
+
+// ═══════════════════════════════════════════════
+//  ГЕНЕРАТОРЫ УРОКОВ (8 шагов каждый)
+// ═══════════════════════════════════════════════
+
+// ═══════════════════════════════════════
+//  СЛОЖЕНИЕ
+// ═══════════════════════════════════════
+function generateAddLesson() {
+    const t = [];
+    const add = (a, b) => a + b;
+
+    // 1. Разминка
+    {
+        const [a, b] = [rnd(3, 15), rnd(3, 15)];
+        t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `${a} + ${b} = ?`, add(a, b), 'Просто складываем два числа'));
+    }
+    // 2. Визуальное — две группы яблок
+    {
+        const [a, b] = [rnd(3, 7), rnd(3, 7)];
+        const svg = applesTwoGroups(a, b);
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg, `Сколько всего яблок?`, add(a, b), makeWrongs(add(a, b)), `${a} красных + ${b} жёлтых = ${add(a, b)}`));
+    }
+    // 3. Выбор
+    {
+        const [a, b] = [rnd(10, 40), rnd(10, 40)];
+        t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${a} + ${b} = ?`, add(a, b), `Складываем: ${a} + ${b}`));
+    }
+    // 4. Парное
+    {
+        const pd = []; const used = new Set();
+        while (pd.length < 3) {
+            const [a, b] = [rnd(5, 30), rnd(5, 30)];
+            const ans = add(a, b);
+            if (!used.has(ans)) { used.add(ans); pd.push({ left: `${a} + ${b}`, right: `${ans}`, answer: ans }); }
+        }
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини выражение с ответом:', pd, 'Сопоставляем суммы'));
+    }
+    // 5. Ввод
+    {
+        const [a, b] = [rnd(15, 60), rnd(10, 40)];
+        t.push(inputT('✏️', 'Ввод', 'badge-input', `${a} + ${b} = ?`, add(a, b), `${a} + ${b} = ${add(a, b)}`));
+    }
+    // 6. Ловушка хитрая
+    {
+        const secret = rnd(10, 30);
+        t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
+            `Если у Маши ${secret} конфет, а Петя дал ей ещё 0, сколько стало?`,
+            secret,
+            'Если прибавить 0 — ничего не меняется! Не дай себя обмануть'));
+    }
+    // 7. Ввод сложнее
+    {
+        const [a, b, c] = [rnd(10, 30), rnd(10, 30), rnd(10, 30)];
+        t.push(inputT('✏️', 'Ввод', 'badge-input',
+            `${a} + ${b} + ${c} = ?`, add(add(a, b), c),
+            `${a}+${b}=${add(a,b)}, +${c}=${add(add(a,b),c)}`));
+    }
+    // 8. Босс
+    {
+        const [apples, more] = [rnd(20, 50), rnd(10, 30)];
+        t.push(inputT('⭐', 'Босс', 'badge-boss',
+            `В саду было ${apples} яблок. Привезли ещё ${more}. Сколько всего?`,
+            add(apples, more),
+            `${apples} + ${more} = ${add(apples, more)}`));
+    }
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  ВЫЧИТАНИЕ
+// ═══════════════════════════════════════
+function generateSubLesson() {
+    const t = [];
+    const g = () => { const x = rnd(15, 50); const y = rnd(3, x - 3); return [x, y]; };
+    const sub = (a, b) => a - b;
+
+    // 1. Разминка
+    {
+        const [a, b] = g();
+        t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `${a} − ${b} = ?`, sub(a, b), 'Вычитаем меньшее из большего'));
+    }
+    // 2. Визуальное — яблоки, часть съедена
+    {
+        const total = rnd(8, 15);
+        const eaten = rnd(2, total - 2);
+        const svg = subSVG(total, eaten);
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
+            `Сколько яблок осталось?`, total - eaten,
+            makeWrongs(total - eaten),
+            `Было ${total}, съели ${eaten} → осталось ${total - eaten}`));
+    }
+    // 3. Выбор
+    {
+        const [a, b] = g();
+        t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${a} − ${b} = ?`, sub(a, b), `${a} − ${b} = ${sub(a, b)}`));
+    }
+    // 4. Парное
+    {
+        const pd = []; const used = new Set();
+        while (pd.length < 3) {
+            const [a, b] = g();
+            const ans = sub(a, b);
+            if (!used.has(ans)) { used.add(ans); pd.push({ left: `${a} − ${b}`, right: `${ans}`, answer: ans }); }
+        }
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини выражение с ответом:', pd, 'Сопоставляем разности'));
+    }
+    // 5. Ввод
+    {
+        const [a, b] = g();
+        t.push(inputT('✏️', 'Ввод', 'badge-input', `${a} − ${b} = ?`, sub(a, b), `${a} − ${b} = ${sub(a, b)}`));
+    }
+    // 6. Ловушка хитрая
+    {
+        const n = rnd(10, 25);
+        const decoy = rnd(3, 8);
+        t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
+            `${n} − ${decoy} + ${decoy} = ?`,
+            n,
+            `Сначала вычли ${decoy}, потом прибавили — вернулись к ${n}! Порядок действий важен`));
+    }
+    // 7. Ввод сложнее
+    {
+        const [money, book, pen] = [rnd(40, 90), rnd(10, 25), rnd(5, 12)];
+        const ans7 = money - book - pen;
+        t.push(inputT('✏️', 'Ввод', 'badge-input',
+            `У Маши ${money} руб. Купила книгу за ${book} руб. и ручку за ${pen} руб. Осталось?`,
+            ans7,
+            `${money} − ${book} − ${pen} = ${ans7}`));
+    }
+    // 8. Босс
+    {
+        const [was, spent, earned] = [rnd(60, 150), rnd(20, 60), rnd(10, 40)];
+        const ans8 = was - spent + earned;
+        t.push(inputT('⭐', 'Босс', 'badge-boss',
+            `На счету было ${was}₽. Потратили ${spent}₽, потом пришло ${earned}₽. Сколько стало?`,
+            ans8,
+            `${was} − ${spent} + ${earned} = ${ans8}`));
+    }
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  УМНОЖЕНИЕ
+// ═══════════════════════════════════════
+function generateMulLesson() {
+    const t = [];
+    const g = () => [rnd(2, 10), rnd(2, 10)];
+    const mul = (a, b) => a * b;
+
+    // 1. Разминка
+    {
+        const [a, b] = g();
+        t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `${a} × ${b} = ?`, mul(a, b), 'Умножаем — это как сложить b раз число a'));
+    }
+    // 2. Визуальное — сетка
+    {
+        const [rows, cols] = [rnd(2, 5), rnd(3, 6)];
+        const svg = mulGridSVG(rows, cols);
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
+            `Сколько всего яблок?`, mul(rows, cols),
+            makeWrongs(mul(rows, cols)),
+            `${rows} ряда × ${cols} в ряду = ${mul(rows, cols)}`));
+    }
+    // 3. Выбор
+    {
+        const [a, b] = g();
+        t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${a} × ${b} = ?`, mul(a, b), `${a} × ${b} = ${mul(a, b)}`));
+    }
+    // 4. Парное
+    {
+        const pd = []; const used = new Set();
+        while (pd.length < 3) {
+            const [a, b] = g();
+            const ans = mul(a, b);
+            if (!used.has(ans)) { used.add(ans); pd.push({ left: `${a} × ${b}`, right: `${ans}`, answer: ans }); }
+        }
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини выражение с ответом:', pd, 'Сопоставляем произведения'));
+    }
+    // 5. Ввод
+    {
+        const [a, b] = g();
+        t.push(inputT('✏️', 'Ввод', 'badge-input', `${a} × ${b} = ?`, mul(a, b), `${a} × ${b} = ${mul(a, b)}`));
+    }
+    // 6. Ловушка хитрая
+    {
+        const n = rnd(3, 9);
+        t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
+            `${n} × 1 × 1 × 1 = ?`,
+            n,
+            `Умножать на 1 можно сколько угодно — число не изменится! ${n} × 1 = ${n}`));
+    }
+    // 7. Ввод сложнее
+    {
+        const [a, b, c] = [rnd(2, 6), rnd(2, 6), rnd(2, 5)];
+        t.push(inputT('✏️', 'Ввод', 'badge-input',
+            `${a} × ${b} × ${c} = ?`,
+            mul(mul(a, b), c),
+            `${a}×${b}=${mul(a,b)}, ×${c}=${mul(mul(a,b),c)}`));
+    }
+    // 8. Босс
+    {
+        const [shelves, books] = [rnd(3, 7), rnd(4, 12)];
+        t.push(inputT('⭐', 'Босс', 'badge-boss',
+            `${shelves} полки, на каждой по ${books} книг. Сколько всего?`,
+            mul(shelves, books),
+            `${shelves} × ${books} = ${mul(shelves, books)}`));
+    }
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  ДЕЛЕНИЕ
+// ═══════════════════════════════════════
+function generateDivLesson() {
+    const t = [];
+    const g = () => { const b = rnd(2, 8); const c = rnd(2, 8); return [b * c, b]; };
+    const div = (a, b) => a / b;
+
+    // 1. Разминка
+    {
+        const [a, b] = g();
+        t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `${a} ÷ ${b} = ?`, div(a, b), 'Делим поровну'));
+    }
+    // 2. Визуальное — корзины
+    {
+        const total = rnd(8, 20);
+        const baskets = rnd(2, 4);
+        const svg = divBasketsSVG(total, baskets);
+        const perBasket = Math.floor(total / baskets);
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
+            `Сколько яблок в одной корзине?`, perBasket,
+            [...new Set([perBasket, perBasket + 1, perBasket - 1, total])],
+            `${total} ÷ ${baskets} = ${perBasket} (остаток ${total - perBasket * baskets})`));
+    }
+    // 3. Выбор
+    {
+        const [a, b] = g();
+        t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${a} ÷ ${b} = ?`, div(a, b), `${a} ÷ ${b} = ${div(a, b)}`));
+    }
+    // 4. Парное
+    {
+        const pd = []; const used = new Set();
+        while (pd.length < 3) {
+            const b = rnd(2, 7); const c = rnd(2, 7); const a = b * c;
+            if (!used.has(c)) { used.add(c); pd.push({ left: `${a} ÷ ${b}`, right: `${c}`, answer: c }); }
+        }
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини выражение с ответом:', pd, 'Сопоставляем частные'));
+    }
+    // 5. Ввод
+    {
+        const [a, b] = g();
+        t.push(inputT('✏️', 'Ввод', 'badge-input', `${a} ÷ ${b} = ?`, div(a, b), `${a} ÷ ${b} = ${div(a, b)}`));
+    }
+    // 6. Ловушка хитрая
+    {
+        const n = rnd(5, 30);
+        t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
+            `${n} ÷ 1 = ?`,
+            n,
+            `Любое число делить на 1 — остаётся собой! ${n} ÷ 1 = ${n}`));
+    }
+    // 7. Ввод сложнее
+    {
+        const [a, b] = [rnd(20, 60), rnd(2, 6)];
+        const ans7 = Math.floor(a / b);
+        const rem7 = a - ans7 * b;
+        t.push(inputT('✏️', 'Ввод', 'badge-input',
+            `${a} ÷ ${b} = ? (только целая часть)`,
+            ans7,
+            `${a} ÷ ${b} = ${ans7} (остаток ${rem7})`));
+    }
+    // 8. Босс
+    {
+        const [candies, friends] = [rnd(20, 50), rnd(3, 7)];
+        const ans8 = Math.floor(candies / friends);
+        const rem8 = candies - ans8 * friends;
+        t.push(inputT('⭐', 'Босс', 'badge-boss',
+            `${candies} конфет на ${friends} друзей. Сколько каждому? (ост.${rem8})`,
+            ans8,
+            `${candies} ÷ ${friends} = ${ans8}`));
+    }
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  УРАВНЕНИЯ
+// ═══════════════════════════════════════
+function generateEqLesson() {
+    const t = [];
+
+    // 1. Разминка
+    {
+        const x = rnd(2, 12); const a = rnd(1, 8);
+        t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `x + ${a} = ${x + a}. x = ?`, x, `x = ${x + a} − ${a} = ${x}`));
+    }
+    // 2. Визуальное — весы
+    {
+        const x = rnd(2, 10); const a = rnd(1, 6);
+        const svg = eqScaleSVG(`x + ${a}`, x + a);
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
+            `Чему равен x?`, x,
+            makeWrongs(x),
+            `На весах слева x + ${a}, справа ${x + a}. Значит x = ${x}`));
+    }
+    // 3. Выбор
+    {
+        const x = rnd(2, 10); const mul = rnd(2, 5);
+        t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${mul} × x = ${mul * x}. x = ?`, x, `x = ${mul * x} ÷ ${mul} = ${x}`));
+    }
+    // 4. Парное
+    {
+        const pd = []; const used = new Set();
+        while (pd.length < 3) {
+            const x = rnd(2, 10); const a = rnd(1, 6);
+            const key = `x + ${a} = ${x + a}`;
+            if (!used.has(x)) { used.add(x); pd.push({ left: key, right: `x = ${x}`, answer: x }); }
+        }
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини уравнение с ответом:', pd, 'Решаем уравнения'));
+    }
+    // 5. Ввод
+    {
+        const x = rnd(2, 12); const a = rnd(2, 8);
+        t.push(inputT('✏️', 'Ввод', 'badge-input', `x + ${a} = ${x + a}. x = ?`, x, `x = ${x + a} − ${a} = ${x}`));
+    }
+    // 6. Ловушка хитрая
+    {
+        const x = rnd(3, 10);
+        t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
+            `2 × x + 3 = ${2 * x + 3}. x = ?`,
+            x,
+            `Сначала отними 3: 2x = ${2 * x}, потом раздели на 2 → x = ${x}`));
+    }
+    // 7. Ввод сложнее
+    {
+        const x = rnd(2, 8); const mul = rnd(2, 5);
+        t.push(inputT('✏️', 'Ввод', 'badge-input',
+            `${mul} × x − 2 = ${mul * x - 2}. x = ?`,
+            x,
+            `Сначала +2: ${mul}x = ${mul * x}, потом ÷${mul} → x = ${x}`));
+    }
+    // 8. Босс
+    {
+        const x = rnd(3, 8);
+        t.push(inputT('⭐', 'Босс', 'badge-boss',
+            `3 коробки с яблоками и ещё 2 яблока = ${3 * x + 2}. Сколько в коробке?`,
+            x,
+            `${3 * x + 2} − 2 = ${3 * x}, ÷3 = ${x}`));
+    }
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  ГЕОМЕТРИЯ (периметр и площадь)
+// ═══════════════════════════════════════
+function generateGeomLesson() {
+    const t = [];
+    const rect = () => [rnd(3, 8), rnd(3, 8)];
+    const sq = () => rnd(3, 7);
+
+    // 1. Разминка
+    {
+        const s = sq();
+        t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `Квадрат со стороной ${s}. Периметр?`, 4 * s, `P = 4 × ${s} = ${4 * s}`));
+    }
+    // 2. Визуальное — прямоугольник
+    {
+        const [w, h] = rect();
+        const svg = geomRectSVG(w, h, `Периметр?`);
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
+            `Чему равен периметр?`, 2 * (w + h),
+            makeWrongs(2 * (w + h)),
+            `P = 2×(${w}+${h}) = ${2 * (w + h)}`));
+    }
+    // 3. Выбор
+    {
+        const [w, h] = rect();
+        t.push(choiceT('🎯', 'Выбор', 'badge-choice', `Прямоугольник ${w}×${h}. Площадь?`, w * h, `S = ${w} × ${h} = ${w * h}`));
+    }
+    // 4. Парное
+    {
+        const pd = [];
+        for (let i = 0; i < 3; i++) {
+            const [w, h] = rect();
+            pd.push({ left: `Прям. ${w}×${h} — S`, right: `${w * h}`, answer: w * h });
+        }
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини фигуру с площадью:', pd, 'Сопоставляем площади'));
+    }
+    // 5. Ввод
+    {
+        const [w, h] = rect();
+        t.push(inputT('✏️', 'Ввод', 'badge-input', `Прямоугольник ${w}×${h}. Периметр?`, 2 * (w + h), `P = 2×(${w}+${h}) = ${2 * (w + h)}`));
+    }
+    // 6. Ловушка хитрая
+    {
+        const s = sq();
+        t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
+            `Квадрат со стороной ${s}. Периметр = ? (НЕ площадь!)`,
+            4 * s,
+            `P = 4 × ${s} = ${4 * s}. Не перепутай с S = ${s * s}!`));
+    }
+    // 7. Ввод сложнее
+    {
+        const [w, h] = rect();
+        t.push(inputT('✏️', 'Ввод', 'badge-input',
+            `Прямоугольник ${w}×${h}. Площадь?`,
+            w * h,
+            `S = ${w} × ${h} = ${w * h}`));
+    }
+    // 8. Босс
+    {
+        const [w, h] = [rnd(4, 10), rnd(3, 8)];
+        t.push(inputT('⭐', 'Босс', 'badge-boss',
+            `Комната ${w}×${h} м. Периметр и площадь (через запятую)`,
+            `${2 * (w + h)},${w * h}`,
+            `P=${2 * (w + h)}, S=${w * h}`));
+    }
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  ДРОБИ
+// ═══════════════════════════════════════
+function generateFracLesson() {
+    const t = [];
+
+    // 1. Разминка
+    t.push(choiceT('🔥', 'Разминка', 'badge-warmup',
+        'Какая дробь больше: 1/4 или 3/4?', '3/4',
+        'Одинаковый знаменатель → больше та, где больше числитель'));
+    // 2. Визуальное — пицца
+    {
+        const total = 8;
+        const eaten = rnd(2, 5);
+        const svg = pizzaSVG(eaten, total);
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
+            `Какая часть пиццы осталась? (в формате N/${total})`,
+            `${total - eaten}/${total}`,
+            [`${total - eaten}/${total}`, `${eaten}/${total}`, `${total - eaten - 1}/${total}`, `${total - eaten + 1}/${total}`],
+            `Было ${total}, съели ${eaten} → осталось ${total - eaten}/${total}`));
+    }
+    // 3. Выбор
+    {
+        const num = rnd(2, 6); const den = num * rnd(2, 4);
+        const reducedNum = 1; const reducedDen = den / num;
+        t.push(choiceT('🎯', 'Выбор', 'badge-choice',
+            `Сократи дробь: ${num}/${den}`,
+            `${reducedNum}/${reducedDen}`,
+            `Делим числитель и знаменатель на ${num} → ${reducedNum}/${reducedDen}`));
+    }
+    // 4. Парное
+    {
+        const pd = [
+            { left: '1/2 от 10', right: '5', answer: '5' },
+            { left: '1/3 от 9', right: '3', answer: '3' },
+            { left: '1/4 от 8', right: '2', answer: '2' }
+        ];
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини дробь от числа с ответом:', pd, 'Находим дробь от числа'));
+    }
+    // 5. Ввод
+    {
+        const den = rnd(3, 6);
+        const total = den * rnd(3, 7);
+        t.push(inputT('✏️', 'Ввод', 'badge-input',
+            `1/${den} от ${total} = ?`,
+            total / den,
+            `${total} ÷ ${den} = ${total / den}`));
+    }
+    // 6. Ловушка хитрая
+    t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
+        '1/2 + 1/2 = ? (не 2/4!)',
+        '1',
+        '1/2 + 1/2 = 2/2 = 1 целое! Знаменатели НЕ складываем!'));
+    // 7. Ввод сложнее
+    {
+        const den = rnd(2, 5);
+        const num = rnd(1, den - 1);
+        const total = den * rnd(2, 6);
+        t.push(inputT('✏️', 'Ввод', 'badge-input',
+            `${num}/${den} от ${total} = ?`,
+            Math.round(total * num / den),
+            `${total} ÷ ${den} × ${num} = ${Math.round(total * num / den)}`));
+    }
+    // 8. Босс
+    {
+        const total = 12;
+        const eaten = rnd(3, 8);
+        t.push(inputT('⭐', 'Босс', 'badge-boss',
+            `Торт на ${total} кусков. Съели ${eaten}. Осталось? (формат N/${total})`,
+            `${total - eaten}/${total}`,
+            `${total} − ${eaten} = ${total - eaten} → ${total - eaten}/${total}`));
+    }
+    return t;
+}
+
+function generateMathLesson(skillId) {
+    const gens = { add: generateAddLesson, sub: generateSubLesson, mul: generateMulLesson, div: generateDivLesson, eq: generateEqLesson, geom: generateGeomLesson, frac: generateFracLesson };
+    const gen = gens[skillId];
+    return gen ? gen() : generateAddLesson();
+}
+
+/* === js/generators/russian.js === */
+// js/generators/russian.js
+
+// ═══════════════════════════════════════════════
+//  SVG-заготовки для русского
+// ═══════════════════════════════════════════════
+
+function letterChoiceSVG(word, missingIdx, options) {
+    const chars = word.split('');
+    const boxSize = 28;
+    const W = chars.length * boxSize + 20;
+    const H = 62;
+    let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+    chars.forEach((ch, i) => {
+        const x = 10 + i * boxSize;
+        if (i === missingIdx) {
+            out += `<rect x="${x}" y="10" width="${boxSize - 4}" height="${boxSize}" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4 2"/>
+            <text x="${x + (boxSize - 4) / 2}" y="32" text-anchor="middle" font-size="16" fill="#F59E0B" font-weight="800">?</text>`;
+        } else {
+            out += `<text x="${x + (boxSize - 4) / 2}" y="32" text-anchor="middle" font-size="16" fill="#1E293B" font-weight="600">${ch}</text>`;
+        }
+    });
+    // Показываем варианты внизу
+    out += `<text x="${W / 2}" y="58" text-anchor="middle" font-size="11" fill="#94A3B8">${options.join(' или ')}</text>`;
+    out += '</svg>';
+    return out;
+}
+
+function compareSVG(word1, word2, question) {
+    const W = 280; const H = 80;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+        <rect x="10" y="6" width="120" height="32" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+        <text x="70" y="27" text-anchor="middle" font-size="14" fill="#1E293B" font-weight="700">${word1}</text>
+        <rect x="150" y="6" width="120" height="32" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="210" y="27" text-anchor="middle" font-size="14" fill="#1E293B" font-weight="700">${word2}</text>
+        <text x="140" y="62" text-anchor="middle" font-size="12" fill="#64748B" font-weight="600">${question}</text>
+    </svg>`;
+}
+
+function ruleHintSVG(rule) {
+    const W = 280; const H = 50;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+        <rect x="10" y="4" width="260" height="40" rx="8" fill="#D1FAE5" stroke="#10B981" stroke-width="1.5"/>
+        <text x="140" y="30" text-anchor="middle" font-size="13" fill="#065F46" font-weight="700">📏 ${rule}</text>
+    </svg>`;
+}
+
+// ═══════════════════════════════════════
+//  ЖИ/ШИ, ЧА/ЩА, ЧУ/ЩУ
+// ═══════════════════════════════════════
+function generateZhishiLesson() {
+    const t = [];
+    const fullDict = [
+        { word: 'ж_раф', ans: 'и', hint: 'ЖИ пиши с И', wrong: 'ы' },
+        { word: 'ш_шка', ans: 'и', hint: 'ШИ пиши с И', wrong: 'ы' },
+        { word: 'маш_на', ans: 'и', hint: 'ШИ пиши с И', wrong: 'ы' },
+        { word: 'ч_шка', ans: 'а', hint: 'ЧА пиши с А', wrong: 'я' },
+        { word: 'щ_вель', ans: 'а', hint: 'ЩА пиши с А', wrong: 'я' },
+        { word: 'ч_до', ans: 'у', hint: 'ЧУ пиши с У', wrong: 'ю' },
+        { word: 'щ_ка', ans: 'у', hint: 'ЩУ пиши с У', wrong: 'ю' },
+        { word: 'ж_знь', ans: 'и', hint: 'ЖИ пиши с И', wrong: 'ы' },
+        { word: 'ч_деса', ans: 'у', hint: 'ЧУ пиши с У', wrong: 'ю' },
+        { word: 'рощ_', ans: 'а', hint: 'ЩА пиши с А', wrong: 'я' }
+    ];
+    const sel = shuffle(fullDict).slice(0, 8);
+
+    // 1. Разминка
+    const d0 = sel[0];
+    t.push(choiceStrT('🔥', 'Разминка', 'badge-warmup',
+        `Вставь букву: «${d0.word}»`, d0.ans, [d0.wrong, 'ы', 'я'], 2, d0.hint));
+
+    // 2. Визуальное — слово с пропущенной буквой
+    const d1 = sel[1];
+    const midx1 = d1.word.indexOf('_');
+    const dispOpts = [d1.ans, d1.wrong];
+    t.push(visualT('🖼️', 'Визуальное', 'badge-visual',
+        letterChoiceSVG(d1.word.replace('_', '?'), midx1, dispOpts),
+        `Какая буква на месте «?»`, d1.ans,
+        shuffle([d1.ans, d1.wrong, d1.wrong === 'ы' ? 'я' : 'ы']),
+        d1.hint));
+
+    // 3. Выбор
+    const d2 = sel[2];
+    t.push(choiceStrT('🎯', 'Выбор', 'badge-choice',
+        `«${d2.word}» — какая буква?`, d2.ans, ['и', 'а', 'у', 'ы', 'я', 'ю'], 3, d2.hint));
+
+    // 4. Парное
+    {
+        const pd = [
+            { left: 'ж_раф', right: 'и', answer: 'и' },
+            { left: 'ч_до', right: 'у', answer: 'у' },
+            { left: 'щ_вель', right: 'а', answer: 'а' }
+        ];
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини слово с буквой:', pd, 'ЖИ-ШИ с И, ЧА-ЩА с А, ЧУ-ЩУ с У'));
+    }
+
+    // 5. Ввод
+    const d4 = sel[4];
+    t.push(inputT('✏️', 'Ввод', 'badge-input', `Впиши букву: «${d4.word}»`, d4.ans, d4.hint));
+
+    // 6. Ловушка хитрая
+    {
+        t.push(choiceStrT('⚠️', 'Ловушка', 'badge-trap',
+            '«ж_раф» — почему И, а не Ы?',
+            'ЖИ пиши с И',
+            ['Потому что Ы', 'ЖИ пиши с Ы', 'Нет правила'],
+            2,
+            'Правило: ЖИ-ШИ пиши с буквой И!'));
+    }
+
+    // 7. Ввод сложнее
+    const d6 = sel[6];
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши: «${d6.word}» и «${sel[7].word}» (две буквы через запятую)`,
+        `${d6.ans},${sel[7].ans}`,
+        `${d6.hint}; ${sel[7].hint}`));
+
+    // 8. Босс
+    {
+        t.push({
+            type: 'boss_zhishi', emoji: '⭐', badge: 'Босс', badgeClass: 'badge-boss',
+            question: 'Вставь буквы во все слова:',
+            words: [
+                { text: 'ж_раф', answer: 'и' },
+                { text: 'ч_до', answer: 'у' },
+                { text: 'щ_ка', answer: 'у' }
+            ],
+            explanation: 'ЖИ, ЧУ, ЩУ'
+        });
+    }
+
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  Разделительный Ь и Ъ
+// ═══════════════════════════════════════
+function generateSoftLesson() {
+    const t = [];
+    const fullDict = [
+        { word: 'в_юга', ans: 'ь', hint: 'Ь — разделительный в корне', wrong: 'ъ' },
+        { word: 'под_езд', ans: 'ъ', hint: 'Ъ — после приставки на согласный', wrong: 'ь' },
+        { word: 'сем_я', ans: 'ь', hint: 'Ь в корне', wrong: 'ъ' },
+        { word: 'об_ём', ans: 'ъ', hint: 'Ъ после приставки', wrong: 'ь' },
+        { word: 'руч_и', ans: 'ь', hint: 'Ь в корне', wrong: 'ъ' },
+        { word: 'с_ехал', ans: 'ъ', hint: 'Ъ после приставки', wrong: 'ь' },
+        { word: 'вороб_и', ans: 'ь', hint: 'Ь в корне', wrong: 'ъ' },
+        { word: 'об_явление', ans: 'ъ', hint: 'Ъ после приставки', wrong: 'ь' }
+    ];
+    const sel = shuffle(fullDict).slice(0, 8);
+
+    // 1. Разминка
+    t.push(choiceStrT('🔥', 'Разминка', 'badge-warmup',
+        `«${sel[0].word}» — Ь или Ъ?`, sel[0].ans, ['ь', 'ъ'], 1, sel[0].hint));
+
+    // 2. Визуальное — сравнение двух слов
+    {
+        const correctAns = 'вьюга — Ь, подъезд — Ъ';
+        const opts = ['вьюга — Ь, подъезд — Ъ', 'вьюга — Ъ, подъезд — Ь', 'оба с Ь', 'оба с Ъ'];
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual',
+            compareSVG('в_юга', 'под_езд', 'Где Ь, а где Ъ?'),
+            'Где Ь, а где Ъ?', correctAns, opts,
+            'Ь в корне, Ъ после приставки'));
+    }
+
+    // 3. Выбор
+    t.push(choiceStrT('🎯', 'Выбор', 'badge-choice',
+        `«${sel[2].word}» — какая буква?`, sel[2].ans, ['ь', 'ъ'], 1, sel[2].hint));
+
+    // 4. Парное
+    {
+        const pd = [
+            { left: 'в_юга (корень)', right: 'Ь', answer: 'Ь' },
+            { left: 'под_езд (приставка)', right: 'Ъ', answer: 'Ъ' },
+            { left: 'сем_я (корень)', right: 'Ь', answer: 'Ь' }
+        ];
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини слово с нужным знаком:', pd, 'Ь в корне, Ъ после приставки'));
+    }
+
+    // 5. Ввод
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши (ь/ъ): «${sel[4].word}»`, sel[4].ans, sel[4].hint));
+
+    // 6. Ловушка хитрая
+    t.push(choiceStrT('⚠️', 'Ловушка', 'badge-trap',
+        '«об_ём» — почему Ъ, а не Ь?',
+        'После приставки ОБ-',
+        ['После приставки ОБ-', 'В корне', 'Перед гласной Ё', 'Это словарное слово'],
+        2,
+        'Ъ пишется после приставки на согласный перед Е, Ё, Ю, Я'));
+
+    // 7. Ввод сложнее
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Вставь знаки: «под_езд» и «руч_и» (два знака через запятую)`,
+        'ъ,ь',
+        'подЪезд (приставка), ручЬи (корень)'));
+
+    // 8. Босс
+    t.push({
+        type: 'boss_soft', emoji: '⭐', badge: 'Босс', badgeClass: 'badge-boss',
+        question: 'Вставь Ь или Ъ:',
+        words: [
+            { text: 'в_юга', answer: 'ь' },
+            { text: 'под_езд', answer: 'ъ' },
+            { text: 'об_явление', answer: 'ъ' }
+        ],
+        explanation: 'Ь в корне, Ъ после приставок'
+    });
+
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  Безударные гласные
+// ═══════════════════════════════════════
+function generateVowelLesson() {
+    const t = [];
+    const fullDict = [
+        { word: 'л_сной', ans: 'е', check: 'лес', wrong: 'и' },
+        { word: 'в_да', ans: 'о', check: 'воды', wrong: 'а' },
+        { word: 'тр_ва', ans: 'а', check: 'травка', wrong: 'о' },
+        { word: 'ст_на', ans: 'е', check: 'стены', wrong: 'и' },
+        { word: 'з_мля', ans: 'е', check: 'земли', wrong: 'и' },
+        { word: 'м_ря', ans: 'о', check: 'море', wrong: 'а' },
+        { word: 'г_ра', ans: 'о', check: 'горы', wrong: 'а' },
+        { word: 'сл_ды', ans: 'е', check: 'след', wrong: 'и' },
+        { word: 'к_тёнок', ans: 'о', check: 'кот', wrong: 'а' },
+        { word: 'в_сна', ans: 'е', check: 'вёсны', wrong: 'и' }
+    ];
+    const sel = shuffle(fullDict).slice(0, 8);
+
+    // 1. Разминка
+    t.push(choiceStrT('🔥', 'Разминка', 'badge-warmup',
+        `«${sel[0].word}» — какая буква? Проверка: «${sel[0].check}»`,
+        sel[0].ans, [sel[0].wrong, 'о', 'а'].filter((x, i, a) => a.indexOf(x) === i), 2,
+        sel[0].check));
+
+    // 2. Визуальное — слово и проверочное
+    {
+        const opts = shuffle([sel[1].ans, sel[1].wrong, sel[1].wrong === 'и' ? 'е' : 'и']);
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual',
+            compareSVG(sel[1].word, sel[1].check, 'Какая буква пропущена?'),
+            'Какая буква пропущена?', sel[1].ans, opts,
+            `Проверочное слово: ${sel[1].check}`));
+    }
+
+    // 3. Выбор
+    t.push(choiceStrT('🎯', 'Выбор', 'badge-choice',
+        `«${sel[2].word}» — проверка «${sel[2].check}». Буква?`,
+        sel[2].ans, ['е', 'и', 'о', 'а'], 2, sel[2].check));
+
+    // 4. Парное
+    {
+        const pd = [
+            { left: 'л_сной', right: 'е (лес)', answer: 'е' },
+            { left: 'в_да', right: 'о (воды)', answer: 'о' },
+            { left: 'тр_ва', right: 'а (травка)', answer: 'а' }
+        ];
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини слово с буквой:', pd, 'Проверяем ударением'));
+    }
+
+    // 5. Ввод
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши букву: «${sel[4].word}» (проверка: ${sel[4].check})`,
+        sel[4].ans, `${sel[4].check} → ${sel[4].ans}`));
+
+    // 6. Ловушка хитрая
+    t.push(choiceStrT('⚠️', 'Ловушка', 'badge-trap',
+        '«к_тёнок» — проверка «кот», пишем О. А если проверки нет?',
+        'Смотрим в словарь',
+        ['Смотрим в словарь', 'Пишем А', 'Пишем любую', 'Пишем О всегда'],
+        2,
+        'Словарные слова надо запоминать!'));
+
+    // 7. Ввод сложнее
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши: «${sel[6].word}» и «${sel[7].word}» (две буквы)`,
+        `${sel[6].ans},${sel[7].ans}`,
+        `${sel[6].check} → ${sel[6].ans}; ${sel[7].check} → ${sel[7].ans}`));
+
+    // 8. Босс
+    t.push({
+        type: 'boss_vowel', emoji: '⭐', badge: 'Босс', badgeClass: 'badge-boss',
+        question: 'Вставь буквы (проверь ударением):',
+        words: [
+            { text: 'л_сной', answer: 'е' },
+            { text: 'в_да', answer: 'о' },
+            { text: 'з_мля', answer: 'е' }
+        ],
+        explanation: 'лЕс, вОды, зЕмли'
+    });
+
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  Непроизносимые согласные
+// ═══════════════════════════════════════
+function generateSilentLesson() {
+    const t = [];
+    const fullDict = [
+        { word: 'чес_ный', ans: 'т', check: 'честь' },
+        { word: 'грус_ный', ans: 'т', check: 'грусть' },
+        { word: 'радос_ный', ans: 'т', check: 'радость' },
+        { word: 'звёз_ный', ans: 'д', check: 'звезда' },
+        { word: 'праз_ник', ans: 'д', check: 'празден (словарное)' },
+        { word: 'чу_ство', ans: 'в', check: 'чуВствую' },
+        { word: 'лес_ница', ans: 'т', check: 'лестница (словарное)' },
+        { word: 'со_нце', ans: 'л', check: 'солнышко' }
+    ];
+    const sel = shuffle(fullDict).slice(0, 8);
+
+    // 1. Разминка
+    t.push(choiceStrT('🔥', 'Разминка', 'badge-warmup',
+        `«${sel[0].word}» — есть буква? Проверка: «${sel[0].check}»`,
+        sel[0].ans, ['т', 'д', 'л', 'в'], 2,
+        `Слышится? Нет. Пишется? Да — ${sel[0].ans}!`));
+
+    // 2. Визуальное
+    {
+        const opts = ['т', 'д', 'л', 'в'];
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual',
+            compareSVG(sel[1].word, sel[1].check, 'Какая буква спряталась?'),
+            'Какая буква спряталась?', sel[1].ans, opts,
+            `Проверка: ${sel[1].check} → ${sel[1].ans}`));
+    }
+
+    // 3. Выбор
+    t.push(choiceStrT('🎯', 'Выбор', 'badge-choice',
+        `«${sel[2].word}» — какая буква?`, sel[2].ans,
+        ['т', 'д', 'в', 'л'], 2, sel[2].check));
+
+    // 4. Парное
+    {
+        const pd = [
+            { left: 'чес_ный', right: 'т (честь)', answer: 'т' },
+            { left: 'со_нце', right: 'л (солнышко)', answer: 'л' },
+            { left: 'звёз_ный', right: 'д (звезда)', answer: 'д' }
+        ];
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини слово с буквой:', pd, 'Проверяем родственным словом'));
+    }
+
+    // 5. Ввод
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши пропущенную букву: «${sel[4].word}»`, sel[4].ans,
+        `${sel[4].check} → ${sel[4].ans}`));
+
+    // 6. Ловушка хитрая
+    t.push(choiceStrT('⚠️', 'Ловушка', 'badge-trap',
+        '«чу_ство» — есть ли буква В?',
+        'Да — В (чуВствую)',
+        ['Да — В (чуВствую)', 'Нет, не пишется', 'Пишется Д', 'Это Л'],
+        2,
+        'Хотя не слышится, пишем В! Проверка: чувствовать'));
+
+    // 7. Ввод сложнее
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши буквы: «${sel[6].word}» и «${sel[7].word}»`,
+        `${sel[6].ans},${sel[7].ans}`,
+        `${sel[6].check} → ${sel[6].ans}; ${sel[7].check} → ${sel[7].ans}`));
+
+    // 8. Босс
+    t.push({
+        type: 'boss_silent', emoji: '⭐', badge: 'Босс', badgeClass: 'badge-boss',
+        question: 'Вставь буквы:',
+        words: [
+            { text: 'чес_ный', answer: 'т' },
+            { text: 'со_нце', answer: 'л' },
+            { text: 'праз_ник', answer: 'д' }
+        ],
+        explanation: 'чесТь, соЛнышко, празДник'
+    });
+
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  -ТСЯ / -ТЬСЯ
+// ═══════════════════════════════════════
+function generateTsyaLesson() {
+    const t = [];
+    const dict = [
+        { phrase: 'Он учит_ся', ans: 'тся', hint: 'Что делает?' },
+        { phrase: 'Надо учит_ся', ans: 'ться', hint: 'Что делать?' },
+        { phrase: 'Мне нравит_ся', ans: 'тся', hint: 'Что делает?' },
+        { phrase: 'Это может случит_ся', ans: 'ться', hint: 'Что сделать?' },
+        { phrase: 'Солнце садит_ся', ans: 'тся', hint: 'Что делает?' },
+        { phrase: 'Пора просыпат_ся', ans: 'ться', hint: 'Что делать?' },
+        { phrase: 'Он смеёт_ся', ans: 'тся', hint: 'Что делает?' },
+        { phrase: 'Не надо боят_ся', ans: 'ться', hint: 'Что делать?' }
+    ];
+    const sel = shuffle(dict).slice(0, 8);
+
+    // 1. Разминка
+    t.push(choiceStrT('🔥', 'Разминка', 'badge-warmup',
+        `«${sel[0].phrase}» — ТСЯ или ТЬСЯ?`,
+        sel[0].ans, ['тся', 'ться'], 1, sel[0].hint));
+
+    // 2. Визуальное — сравнение двух фраз
+    {
+        const correctAns = 'Он учится — ТСЯ, Надо учиться — ТЬСЯ';
+        const opts = ['Он учится — ТСЯ, Надо учиться — ТЬСЯ', 'оба с ТЬСЯ', 'оба с ТСЯ', 'Надо учится — ТСЯ'];
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual',
+            compareSVG('Он учит_ся', 'Надо учит_ся', 'Где ТСЯ, а где ТЬСЯ?'),
+            'Где ТСЯ, а где ТЬСЯ?', correctAns, opts,
+            'Что делает? → ТСЯ. Что делать? → ТЬСЯ'));
+    }
+
+    // 3. Выбор
+    t.push(choiceStrT('🎯', 'Выбор', 'badge-choice',
+        `«${sel[2].phrase}» — ?`, sel[2].ans, ['тся', 'ться'], 1, sel[2].hint));
+
+    // 4. Парное
+    {
+        const pd = [
+            { left: 'Он смеёт_ся', right: 'тся', answer: 'тся' },
+            { left: 'Надо учит_ся', right: 'ться', answer: 'ться' },
+            { left: 'Солнце садит_ся', right: 'тся', answer: 'тся' }
+        ];
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини фразу с окончанием:', pd, 'Задай вопрос к глаголу!'));
+    }
+
+    // 5. Ввод
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши: «${sel[4].phrase}» (тся/ться)`, sel[4].ans,
+        sel[4].hint));
+
+    // 6. Ловушка хитрая
+    t.push(choiceStrT('⚠️', 'Ловушка', 'badge-trap',
+        '«Мне нравит_ся этот кот» — почему ТСЯ без Ь?',
+        'Что делает? — без Ь',
+        ['Что делает? — без Ь', 'Что делать? — с Ь', 'Всегда с Ь', 'Это исключение'],
+        2,
+        'Вопрос «Что делает?» → нет Ь → ТСЯ!'));
+
+    // 7. Ввод сложнее
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `«${sel[6].phrase}» и «${sel[7].phrase}» (два ответа через запятую)`,
+        `${sel[6].ans},${sel[7].ans}`,
+        `${sel[6].hint}; ${sel[7].hint}`));
+
+    // 8. Босс
+    t.push({
+        type: 'boss_tsya', emoji: '⭐', badge: 'Босс', badgeClass: 'badge-boss',
+        question: 'Вставь ТСЯ или ТЬСЯ:',
+        words: [
+            { text: 'не ошиба_', answer: 'ться' },
+            { text: 'труди_', answer: 'ться' },
+            { text: 'он старае_', answer: 'тся' }
+        ],
+        explanation: 'Что делать? → ТЬСЯ. Что делает? → ТСЯ'
+    });
+
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  ПРЕ / ПРИ
+// ═══════════════════════════════════════
+function generatePrepriLesson() {
+    const t = [];
+    const dict = [
+        { word: 'пр_бывать', ans: 'и', hint: 'приближаться' },
+        { word: 'пр_мудрый', ans: 'е', hint: 'очень (= пере-)' },
+        { word: 'пр_шить', ans: 'и', hint: 'присоединить' },
+        { word: 'пр_красный', ans: 'е', hint: 'очень красивый' },
+        { word: 'пр_вокзальный', ans: 'и', hint: 'рядом с вокзалом' },
+        { word: 'пр_градить', ans: 'е', hint: 'перегородить' },
+        { word: 'пр_открыть', ans: 'и', hint: 'не полностью' },
+        { word: 'пр_увеличить', ans: 'е', hint: 'очень увеличить' }
+    ];
+    const sel = shuffle(dict).slice(0, 8);
+
+    // 1. Разминка
+    t.push(choiceStrT('🔥', 'Разминка', 'badge-warmup',
+        `«${sel[0].word}» — ПРЕ или ПРИ?`,
+        sel[0].ans === 'е' ? 'ПРЕ' : 'ПРИ',
+        ['ПРЕ', 'ПРИ'], 1, sel[0].hint));
+
+    // 2. Визуальное
+    {
+        const correctAns = 'прИбывать — ПРИ, прЕмудрый — ПРЕ';
+        const opts = ['прИбывать — ПРИ, прЕмудрый — ПРЕ', 'оба с ПРЕ', 'оба с ПРИ', 'прЕбывать — ПРЕ'];
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual',
+            compareSVG('пр_бывать', 'пр_мудрый', 'Где ПРИ, а где ПРЕ?'),
+            'Где ПРИ, а где ПРЕ?', correctAns, opts,
+            'ПРИ = приближение, ПРЕ = очень'));
+    }
+
+    // 3. Выбор
+    t.push(choiceStrT('🎯', 'Выбор', 'badge-choice',
+        `«${sel[2].word}» — ?`, sel[2].ans === 'е' ? 'ПРЕ' : 'ПРИ',
+        ['ПРЕ', 'ПРИ'], 1, sel[2].hint));
+
+    // 4. Парное
+    {
+        const pd = [
+            { left: 'пр_бывать (приближение)', right: 'ПРИ', answer: 'ПРИ' },
+            { left: 'пр_мудрый (очень)', right: 'ПРЕ', answer: 'ПРЕ' },
+            { left: 'пр_открыть (не полностью)', right: 'ПРИ', answer: 'ПРИ' }
+        ];
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини слово с приставкой:', pd, 'ПРИ — приближение/неполнота, ПРЕ — очень/пере'));
+    }
+
+    // 5. Ввод
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши (и/е): «${sel[4].word}»`, sel[4].ans, sel[4].hint));
+
+    // 6. Ловушка хитрая
+    t.push(choiceStrT('⚠️', 'Ловушка', 'badge-trap',
+        '«пр_дать друга» — ПРЕ или ПРИ?',
+        'ПРЕ (передать)',
+        ['ПРЕ (передать)', 'ПРИ (приблизить)', 'ПРИ (присоединить)', 'ПРЕ (очень)'],
+        2,
+        'ПРЕдать = пере-дать! Не путай с «придать значение»'));
+
+    // 7. Ввод сложнее
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши две буквы: «${sel[6].word}» и «${sel[7].word}»`,
+        `${sel[6].ans},${sel[7].ans}`,
+        `${sel[6].hint}; ${sel[7].hint}`));
+
+    // 8. Босс
+    t.push({
+        type: 'boss_prepri', emoji: '⭐', badge: 'Босс', badgeClass: 'badge-boss',
+        question: 'Вставь ПРЕ или ПРИ:',
+        words: [
+            { text: 'Пр_мудрый', answer: 'е' },
+            { text: 'пр_был', answer: 'и' },
+            { text: 'пр_вокзальный', answer: 'и' }
+        ],
+        explanation: 'ПРЕ, ПРИ, ПРИ'
+    });
+
+    return t;
+}
+
+// ═══════════════════════════════════════
+//  Н и НН
+// ═══════════════════════════════════════
+function generateNNLesson() {
+    const t = [];
+    const dict = [
+        { word: 'кури_ый', ans: 'н', hint: 'Суффикс -ИН- → одна Н', wrong: 'нн' },
+        { word: 'соломе_ый', ans: 'нн', hint: 'Суффикс -ЕНН- → НН', wrong: 'н' },
+        { word: 'стекля_ый', ans: 'нн', hint: 'Исключение! Стеклянный, оловянный, деревянный', wrong: 'н' },
+        { word: 'ветре_ый', ans: 'н', hint: 'Исключение! Ветреный — одна Н', wrong: 'нн' },
+        { word: 'пусты_ый', ans: 'нн', hint: 'Стык корня и суффикса: пустыН-Н-ый', wrong: 'н' },
+        { word: 'кожа_ый', ans: 'н', hint: 'Суффикс -АН- → одна Н', wrong: 'нн' },
+        { word: 'обеде_ый', ans: 'нн', hint: 'Суффикс -ЕНН- → НН', wrong: 'н' },
+        { word: 'глиня_ый', ans: 'н', hint: 'Суффикс -ЯН- → одна Н', wrong: 'нн' }
+    ];
+    const sel = shuffle(dict).slice(0, 8);
+
+    // 1. Разминка
+    t.push(choiceStrT('🔥', 'Разминка', 'badge-warmup',
+        `«${sel[0].word}» — Н или НН?`,
+        sel[0].ans === 'н' ? 'Н' : 'НН',
+        ['Н', 'НН'], 1, sel[0].hint));
+
+    // 2. Визуальное
+    {
+        const correctAns = 'курИ-Н-ый → Н, солом-ЕНН-ый → НН';
+        const opts = ['курИ-Н-ый → Н, солом-ЕНН-ый → НН', 'оба с НН', 'оба с Н', 'курИ-НН-ый → НН'];
+        t.push(visualT('🖼️', 'Визуальное', 'badge-visual',
+            compareSVG('кури_ый', 'соломе_ый', 'Где Н, а где НН?'),
+            'Где Н, а где НН?', correctAns, opts,
+            '-ИН- → Н, -ЕНН- → НН'));
+    }
+
+    // 3. Выбор
+    t.push(choiceStrT('🎯', 'Выбор', 'badge-choice',
+        `«${sel[2].word}» — ?`, sel[2].ans === 'н' ? 'Н' : 'НН',
+        ['Н', 'НН'], 1, sel[2].hint));
+
+    // 4. Парное
+    {
+        const pd = [
+            { left: 'кури_ый (-ИН-)', right: 'Н', answer: 'Н' },
+            { left: 'соломе_ый (-ЕНН-)', right: 'НН', answer: 'НН' },
+            { left: 'стекля_ый (искл.)', right: 'НН', answer: 'НН' }
+        ];
+        t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини слово с количеством Н:', pd, '-АН/-ЯН/-ИН → Н, -ЕНН/-ОНН → НН'));
+    }
+
+    // 5. Ввод
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши (н/нн): «${sel[4].word}»`, sel[4].ans, sel[4].hint));
+
+    // 6. Ловушка хитрая
+    t.push(choiceStrT('⚠️', 'Ловушка', 'badge-trap',
+        '«ветре_ый» — почему одна Н?',
+        'Это исключение',
+        ['Это исключение', 'Суффикс -ЕН-', 'Суффикс -ИН-', 'Краткая форма'],
+        2,
+        'Ветреный — исключение, одна Н. Но: безветреННый!'));
+
+    // 7. Ввод сложнее
+    t.push(inputT('✏️', 'Ввод', 'badge-input',
+        `Впиши: «${sel[6].word}» и «${sel[7].word}» (через запятую)`,
+        `${sel[6].ans},${sel[7].ans}`,
+        `${sel[6].hint}; ${sel[7].hint}`));
+
+    // 8. Босс
+    t.push({
+        type: 'boss_nn', emoji: '⭐', badge: 'Босс', badgeClass: 'badge-boss',
+        question: 'Вставь Н или НН:',
+        words: [
+            { text: 'стекля_ый', answer: 'нн' },
+            { text: 'кожа_ый', answer: 'н' },
+            { text: 'деревя_ый', answer: 'нн' }
+        ],
+        explanation: 'стекляННый (искл), кожаНый (-АН-), деревяННый (искл)'
+    });
+
+    return t;
+}
+
+function generateRusLesson(skillId) {
+    const gens = {
+        zhishi: generateZhishiLesson, soft: generateSoftLesson,
+        vowel: generateVowelLesson, silent: generateSilentLesson,
+        tsya: generateTsyaLesson, prepri: generatePrepriLesson,
+        nn: generateNNLesson
+    };
+    const gen = gens[skillId];
+    return gen ? gen() : generateZhishiLesson();
+}
+
+/* === js/components/taskRenderer.js === */
+// js/components/taskRenderer.js
+
+
+
+function renderTask(container, task, options = {}) {
+    const { isBonus = false, compact = false } = options;
+    
+    return new Promise((resolve) => {
+        container.innerHTML = '';
+        
+        if (task.emoji) {
+            const emojiEl = document.createElement('div');
+            emojiEl.className = compact ? 'scene-emoji' : 'lesson-emoji';
+            emojiEl.textContent = task.emoji;
+            container.appendChild(emojiEl);
+        }
+        
+        if (task.badge && !compact) {
+            const badgeEl = document.createElement('div');
+            badgeEl.className = `lesson-type-badge ${task.badgeClass || ''}`;
+            badgeEl.textContent = task.badge;
+            container.appendChild(badgeEl);
+        }
+        
+        const questionEl = document.createElement('div');
+        questionEl.className = compact ? 'scene-text' : 'lesson-question';
+        if (task.question) questionEl.textContent = task.question;
+        container.appendChild(questionEl);
+        
+        const explanationEl = document.createElement('div');
+        explanationEl.className = compact ? 'explanation-box' : 'lesson-explanation';
+        container.appendChild(explanationEl);
+        
+    if (task.type === 'visual') {
+        renderVisual(container, task, explanationEl, resolve, isBonus, compact);
+    } else if (task.type === 'choice') {
+        renderChoice(container, task, explanationEl, resolve, isBonus, compact);
+    } else if (task.type === 'input') {
+        renderInput(container, task, explanationEl, resolve, isBonus, compact);
+    } else if (task.type === 'pair') {
+        renderPair(container, task, explanationEl, resolve, isBonus, compact);
+    } else if (task.type && task.type.startsWith('boss')) {
+        renderBoss(container, task, explanationEl, resolve, isBonus);
+    }
+    });
+}
+
+function renderVisual(container, task, explEl, resolve, isBonus, compact) {
+    // SVG-иллюстрация
+    const svgWrapper = document.createElement('div');
+    svgWrapper.className = 'visual-svg-wrapper';
+    svgWrapper.innerHTML = task.svg;
+    svgWrapper.style.cssText = 'width:100%;max-width:280px;margin:0 auto 8px;text-align:center;';
+    container.appendChild(svgWrapper);
+
+    const optsClass = compact ? 'task-options' : 'lesson-options';
+    const optClass = compact ? 'task-option' : 'lesson-option';
+    
+    const optsDiv = document.createElement('div');
+    optsDiv.className = optsClass;
+    
+    const correctAnswer = task.correctAns;
+    
+    task.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = optClass;
+        btn.textContent = optText;
+        btn.dataset.idx = idx;
+        btn.dataset.value = String(optText);
+        
+        btn.addEventListener('click', () => {
+            optsDiv.querySelectorAll('button').forEach(b => b.style.pointerEvents = 'none');
+            
+            const isCorrect = String(btn.dataset.value) === String(correctAnswer);
+            
+            if (isCorrect) {
+                playSound('correct', state.theme);
+                btn.classList.add('correct-pick');
+                btn.textContent = '✅ ' + optText;
+                explEl.innerHTML = '<span style="font-size:16px;">✅</span> ' + task.explanation;
+                explEl.className = (compact ? 'explanation-box' : 'lesson-explanation') + ' show good';
+                setTimeout(() => resolve({ isCorrect: true, isBonus }), 400);
+            } else {
+                playSound('wrong', state.theme);
+                btn.classList.add('wrong-pick');
+                btn.textContent = '❌ ' + optText;
+                optsDiv.querySelectorAll('button').forEach(b => {
+                    if (String(b.dataset.value) === String(correctAnswer)) {
+                        b.classList.add('correct-pick');
+                        b.textContent = '✅ ' + b.dataset.value;
+                    }
+                });
+                explEl.innerHTML = '<span style="font-size:16px;">🤔</span> ' + task.explanation;
+                explEl.className = (compact ? 'explanation-box' : 'lesson-explanation') + ' show bad';
+                setTimeout(() => resolve({ isCorrect: false, isBonus }), 600);
+            }
+        });
+        
+        optsDiv.appendChild(btn);
+    });
+    
+    container.appendChild(optsDiv);
+}
+
+function renderChoice(container, task, explEl, resolve, isBonus, compact) {
+    const optsClass = compact ? 'task-options' : 'lesson-options';
+    const optClass = compact ? 'task-option' : 'lesson-option';
+    
+    const optsDiv = document.createElement('div');
+    optsDiv.className = optsClass;
+    
+    const correctAnswer = task.correctAns;
+    
+    task.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = optClass;
+        btn.textContent = optText;
+        btn.dataset.idx = idx;
+        btn.dataset.value = String(optText);
+        
+        btn.addEventListener('click', () => {
+            optsDiv.querySelectorAll('button').forEach(b => b.style.pointerEvents = 'none');
+            
+            const isCorrect = String(btn.dataset.value) === String(correctAnswer);
+            
+            if (isCorrect) {
+                playSound('correct', state.theme);
+                btn.classList.add('correct-pick');
+                btn.textContent = '✅ ' + optText;
+                explEl.innerHTML = '<span style="font-size:16px;">✅</span> ' + task.explanation;
+                explEl.className = (compact ? 'explanation-box' : 'lesson-explanation') + ' show good';
+                setTimeout(() => resolve({ isCorrect: true, isBonus }), 400);
+            } else {
+                playSound('wrong', state.theme);
+                btn.classList.add('wrong-pick');
+                btn.textContent = '❌ ' + optText;
+                optsDiv.querySelectorAll('button').forEach(b => {
+                    if (String(b.dataset.value) === String(correctAnswer)) {
+                        b.classList.add('correct-pick');
+                        b.textContent = '✅ ' + b.dataset.value;
+                    }
+                });
+                explEl.innerHTML = '<span style="font-size:16px;">🤔</span> ' + task.explanation;
+                explEl.className = (compact ? 'explanation-box' : 'lesson-explanation') + ' show bad';
+                setTimeout(() => resolve({ isCorrect: false, isBonus }), 600);
+            }
+        });
+        
+        optsDiv.appendChild(btn);
+    });
+    
+    container.appendChild(optsDiv);
+}
+
+function renderInput(container, task, explEl, resolve, isBonus, compact) {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = compact ? 'task-input-row' : 'lesson-input-row';
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = compact ? 'task-input' : 'lesson-input';
+    
+    if (task.correctAns !== undefined && task.correctAns !== null) {
+        const ansStr = String(task.correctAns).toLowerCase();
+        if (ansStr === 'н' || ansStr === 'нн') input.placeholder = 'н/нн';
+        else if (ansStr === 'ь' || ansStr === 'ъ') input.placeholder = 'ь/ъ';
+        else if (ansStr === 'тся' || ansStr === 'ться') input.placeholder = 'тся/ться';
+        else if (ansStr === 'и' || ansStr === 'е') input.placeholder = 'букву';
+        else if (!isNaN(task.correctAns)) input.placeholder = 'Число';
+        else input.placeholder = 'Ответ';
+    } else {
+        input.placeholder = 'Ответ';
+    }
+    input.autocomplete = 'off';
+    
+    const btn = document.createElement('button');
+    btn.className = compact ? 'btn-submit' : 'btn-lesson-submit';
+    btn.textContent = '✓';
+    
+    const submit = () => {
+        const value = input.value.trim().toLowerCase();
+        if (!value) {
+            input.style.borderColor = 'var(--red)';
+            input.style.animation = 'shake 0.5s ease';
+            setTimeout(() => { input.style.animation = ''; input.style.borderColor = 'rgba(255,255,255,0.2)'; }, 500);
+            return;
+        }
+        
+        btn.disabled = true;
+        input.disabled = true;
+        
+        const correctStr = String(task.correctAns).toLowerCase();
+        let isCorrect = (value === correctStr);
+        if (!isCorrect && correctStr.includes(',')) {
+            isCorrect = value === correctStr.replace(/\s+/g, '');
+        }
+        
+        if (isCorrect) {
+            playSound('correct', state.theme);
+            input.style.borderColor = 'var(--green)';
+            input.style.background = 'rgba(16,185,129,0.2)';
+            explEl.textContent = '✅ ' + task.explanation;
+            explEl.className = (compact ? 'explanation-box' : 'lesson-explanation') + ' show good';
+            resolve({ isCorrect: true, isBonus });
+        } else {
+            playSound('wrong', state.theme);
+            input.style.borderColor = 'var(--red)';
+            input.style.background = 'rgba(239,68,68,0.15)';
+            explEl.textContent = '🤔 ' + task.explanation + ' ✅ ' + task.correctAns;
+            explEl.className = (compact ? 'explanation-box' : 'lesson-explanation') + ' show bad';
+            resolve({ isCorrect: false, isBonus });
+        }
+    };
+    
+    btn.addEventListener('click', submit);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+    
+    rowDiv.appendChild(input);
+    rowDiv.appendChild(btn);
+    container.appendChild(rowDiv);
+}
+
+function renderPair(container, task, explEl, resolve, isBonus, compact) {
+    const grid = document.createElement('div');
+    grid.className = 'pair-grid';
+    
+    const leftDiv = document.createElement('div');
+    leftDiv.className = 'pair-left';
+    const rightDiv = document.createElement('div');
+    rightDiv.className = 'pair-right';
+    
+    const leftItems = task.pairs.map((p, i) => ({ text: p.left, idx: i }));
+    const rightItems = task.pairs.map((p, i) => ({ text: p.right, idx: i }));
+    
+    const shuf = (arr) => [...arr].sort(() => Math.random() - 0.5);
+    const shuffledLeft = shuf(leftItems);
+    const shuffledRight = shuf(rightItems);
+    
+    let selectedLeft = null;
+    let matchedCount = 0;
+    const total = task.pairs.length;
+    
+    shuffledLeft.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'pair-item';
+        btn.textContent = item.text;
+        btn.dataset.pairIdx = item.idx;
+        btn.dataset.side = 'left';
+        leftDiv.appendChild(btn);
+    });
+    
+    shuffledRight.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'pair-item';
+        btn.textContent = item.text;
+        btn.dataset.pairIdx = item.idx;
+        btn.dataset.side = 'right';
+        rightDiv.appendChild(btn);
+    });
+    
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:11px;opacity:0.5;margin-top:6px;text-align:center;';
+    hint.textContent = 'Нажимай: левый → правый';
+    
+    const allLeftBtns = leftDiv.querySelectorAll('.pair-item');
+    const allRightBtns = rightDiv.querySelectorAll('.pair-item');
+    
+    allLeftBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.classList.contains('matched')) return;
+            allLeftBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedLeft = { el: btn, idx: parseInt(btn.dataset.pairIdx) };
+        });
+    });
+    
+    allRightBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.classList.contains('matched')) return;
+            if (!selectedLeft) return;
+            
+            const rightIdx = parseInt(btn.dataset.pairIdx);
+            
+            if (selectedLeft.idx === rightIdx) {
+                playSound('correct', state.theme);
+                selectedLeft.el.classList.add('matched');
+                btn.classList.add('matched');
+                matchedCount++;
+                selectedLeft = null;
+                allLeftBtns.forEach(b => b.classList.remove('selected'));
+                
+                if (matchedCount >= total) {
+                    explEl.textContent = '✅ ' + (task.explanation || 'Все пары верны!');
+                    explEl.className = (compact ? 'explanation-box' : 'lesson-explanation') + ' show good';
+                    resolve({ isCorrect: true, isBonus });
+                }
+            } else {
+                playSound('wrong', state.theme);
+                btn.classList.add('wrong-flash');
+                setTimeout(() => btn.classList.remove('wrong-flash'), 500);
+                selectedLeft.el.classList.remove('selected');
+                selectedLeft = null;
+            }
+        });
+    });
+    
+    grid.appendChild(leftDiv);
+    grid.appendChild(rightDiv);
+    container.appendChild(grid);
+    container.appendChild(hint);
+}
+
+function renderBoss(container, task, explEl, resolve, isBonus) {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:100%;';
+    
+    const inputs = [];
+    task.words.forEach((w) => {
+        const row = document.createElement('div');
+        row.className = 'boss-row';
+        
+        const label = document.createElement('span');
+        label.className = 'boss-label';
+        label.textContent = w.text;
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'boss-input';
+        input.placeholder = 'буква';
+        input.autocomplete = 'off';
+        input.maxLength = 5;
+        
+        if (w.answer) {
+            if (['н', 'нн'].includes(w.answer)) input.placeholder = 'н/нн';
+            else if (['ь', 'ъ'].includes(w.answer)) input.placeholder = 'ь/ъ';
+            else if (['тся', 'ться'].includes(w.answer)) input.placeholder = 'тся/ться';
+            else if (['и', 'е'].includes(w.answer)) input.placeholder = 'и/е';
+        }
+        
+        row.appendChild(label);
+        row.appendChild(input);
+        wrapper.appendChild(row);
+        inputs.push({ input, answer: w.answer });
+    });
+    
+    const submitBtn = document.createElement('button');
+    submitBtn.className = 'btn-lesson-submit';
+    submitBtn.textContent = '✓ Проверить';
+    submitBtn.style.marginTop = '6px';
+    
+    submitBtn.addEventListener('click', () => {
+        let allOk = true;
+        inputs.forEach(({ input, answer }) => {
+            const val = input.value.trim().toLowerCase();
+            if (val !== answer) {
+                allOk = false;
+                input.style.borderColor = 'var(--red)';
+                input.style.background = 'rgba(239,68,68,0.15)';
+            } else {
+                input.style.borderColor = 'var(--green)';
+                input.style.background = 'rgba(16,185,129,0.2)';
+            }
+        });
+        
+        submitBtn.disabled = true;
+        inputs.forEach(({ input }) => input.disabled = true);
+        
+        if (allOk) {
+            playSound('correct', state.theme);
+            explEl.textContent = '✅ ' + task.explanation;
+            explEl.className = 'lesson-explanation show good';
+            resolve({ isCorrect: true, isBonus });
+        } else {
+            playSound('wrong', state.theme);
+            explEl.textContent = '🤔 ' + task.explanation;
+            explEl.className = 'lesson-explanation show bad';
+            resolve({ isCorrect: false, isBonus });
+        }
+    });
+    
+    inputs.forEach(({ input }) => {
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') submitBtn.click(); });
+    });
+    
+    wrapper.appendChild(submitBtn);
+    container.appendChild(wrapper);
+}
+
+/* === js/components/tutorial.js === */
+const steps = [
+    { emoji: '🐱', title: 'Добро пожаловать!', text: 'Я Кот Учёный. Нажимай на доступный навык, чтобы начать урок.' },
+    { emoji: '🧮', title: 'Два предмета', text: 'Переключайся между математикой и русским в шапке.' },
+    { emoji: '🪤', title: 'Ловушки', text: 'Ошибки создают ловушки. Обезвреживай их и получай бонусы!' },
+    { emoji: '🐱', title: 'Погладь меня!', text: 'Нажми на кота — я мурчу и даю достижения!' }
+];
+
+function startTutorial() {
+    if (localStorage.getItem(TUTORIAL_KEY)) return;
+    
+    const overlay = $('#tutorialOverlay');
+    let step = 0;
+    
+    const render = () => {
+        const s = steps[step];
+        $('#tutEmoji').textContent = s.emoji;
+        $('#tutTitle').textContent = s.title;
+        $('#tutText').textContent = s.text;
+        $('#tutDots').innerHTML = steps.map((_, i) => `<span class="tutorial-dot ${i === step ? 'active' : ''}"></span>`).join('');
+        $('#tutNext').textContent = step === steps.length - 1 ? 'Понял!' : 'Далее';
+        overlay.classList.add('active');
+    };
+    
+    const close = () => { overlay.classList.remove('active'); localStorage.setItem(TUTORIAL_KEY, '1'); };
+    
+    $('#tutNext').addEventListener('click', () => { step++; if (step >= steps.length) close(); else render(); });
+    $('#tutSkip').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    
+    render();
+}
+
+/* === js/components/skillTree.js === */
+function renderSkillTree() {
+    const skills = getCurrentSkills();
+    const container = $('#skillTree');
+    if (!container) return;
+
+    container.innerHTML = '<div class="skill-path">' + skills.map(s => {
+        const nc = s.status === 'completed' ? 'completed' : s.status === 'current' ? 'current' : '';
+        const cc = s.status === 'locked' ? 'locked' : s.status === 'completed' ? 'completed' : 'current';
+        const se = s.status === 'completed' ? '✅' : s.status === 'current' ? '▶️' : '🔒';
+        const pt = s.progress === 100 ? 'Пройдено' : s.progress > 0 ? `${s.progress}%` : (s.status === 'current' ? 'Готов к старту 🚀' : 'Не начато');
+        return `<div class="skill-node ${nc}">
+            <div class="skill-card ${cc}" data-id="${s.id}" data-status="${s.status}">
+                <div class="skill-icon-box" style="background:${s.color}15;color:${s.color};">${s.icon}</div>
+                <div class="skill-info">
+                    <div class="skill-name">${s.name}</div>
+                    <div class="skill-progress-text">${pt}</div>
+                    <div class="skill-progress-bar"><div class="skill-progress-fill" style="width:${s.progress}%;background:${s.color};"></div></div>
+                </div>
+                <div class="skill-badge">${se}</div>
+            </div>
+        </div>`;
+    }).join('') + '</div>';
+
+    $$('#skillTree .skill-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const st = card.dataset.status;
+            const id = card.dataset.id;
+            if (st === 'locked') showToast('🔒', 'Пройди предыдущий!', $('#toast'));
+            else if (st === 'completed') showToast('✅', 'Уже пройден!', $('#toast'));
+            else startLesson(id);
+        });
+    });
+}
+
+/* === js/components/lesson.js === */
+// js/components/lesson.js
+
+
+
+
+
+
+
+
+
+
+const LESSON_STORAGE_KEY = STORAGE_KEY + '_lesson_progress';
+let stepHistory = [];
+
+function generateLesson(skillId, subject) {
+    if (subject === 'math') return generateMathLesson(skillId);
+    return generateRusLesson(skillId);
+}
+
+function saveLessonProgress() {
+    if (!state.currentLesson) return;
+    const progress = {
+        skillId: state.lessonSkillId, subject: state.subject,
+        step: state.lessonStep, tasks: state.lessonTasks,
+        correct: state.lessonCorrect, wrong: state.lessonWrong,
+        stepHistory: stepHistory
+    };
+    localStorage.setItem(LESSON_STORAGE_KEY, JSON.stringify(progress));
+}
+
+function loadLessonProgress() {
+    const saved = localStorage.getItem(LESSON_STORAGE_KEY);
+    if (!saved) return false;
+    try {
+        const progress = JSON.parse(saved);
+        if (!progress.skillId || !progress.tasks || progress.tasks.length === 0) return false;
+        state.currentLesson = progress.skillId; state.lessonSkillId = progress.skillId;
+        state.lessonStep = progress.step; state.lessonTasks = progress.tasks;
+        state.lessonCorrect = progress.correct; state.lessonWrong = progress.wrong;
+        stepHistory = progress.stepHistory || [];
+        return true;
+    } catch (e) { return false; }
+}
+
+function clearLessonProgress() { localStorage.removeItem(LESSON_STORAGE_KEY); }
+
+function initStepHistory() {
+    const total = state.lessonTasks.length;
+    stepHistory = new Array(total).fill('pending');
+}
+
+function updateProgressBar() {
+    const total = state.lessonTasks.length;
+    const done = state.lessonStep;
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    const bar = $('#lessonProgressBar');
+    if (bar) { bar.style.width = percent + '%'; bar.classList.toggle('complete', percent >= 100); }
+}
+
+function renderDots() {
+    const container = $('#lessonSteps');
+    if (!container) return;
+    const total = state.lessonTasks.length;
+    let html = '';
+    for (let i = 0; i < total; i++) {
+        let dotClass = 'lstep-dot';
+        if (stepHistory[i] === 'correct') dotClass += ' done';
+        else if (stepHistory[i] === 'wrong') dotClass += ' wrong';
+        else if (i === state.lessonStep && stepHistory[i] === 'pending') dotClass += ' current';
+        html += `<span class="${dotClass}"></span>`;
+    }
+    container.innerHTML = html;
+}
+
+function startLesson(skillId) {
+    const saved = localStorage.getItem(LESSON_STORAGE_KEY);
+    if (saved) {
+        try {
+            const progress = JSON.parse(saved);
+            if (progress.skillId === skillId && progress.tasks && progress.tasks.length > 0) {
+                const skill = getCurrentSkills().find(s => s.id === skillId);
+                const skillName = skill ? skill.name : 'Неизвестно';
+                const resume = confirm(`🐱 У тебя есть незавершённый урок!\n\n📚 Тема: «${skillName}»\n📍 Пройдено: ${progress.step} из ${progress.tasks.length} заданий\n✅ Верных ответов: ${progress.correct}\n\nПродолжить урок?`);
+                if (resume && loadLessonProgress()) {
+                    const im = state.subject === 'math';
+                    $('#lessonTitle').textContent = (im ? '🧮 ' : '📝 ') + skillName;
+                    $('#lessonContainer').className = 'lesson-container ' + (im ? 'math-lesson' : 'rus-lesson');
+                    $('#lessonHeader').className = 'lesson-header ' + (im ? 'math-bar' : 'rus-bar');
+                    $('#lessonNextBtn').className = 'lesson-next ' + (im ? 'math-next' : 'rus-next');
+                    $('#btnLessonFinish').className = 'btn-lesson-finish ' + (im ? 'math-finish' : 'rus-finish');
+                    updateProgressBar(); renderDots();
+                    $('#lessonOverlay').classList.add('active');
+                    $('#lessonNextBtn').classList.remove('show');
+                    $('#lessonFinishBlock').classList.remove('show');
+                    $('#lessonScene').style.display = 'flex';
+                    renderLessonStep();
+                    return;
+                }
+            }
+        } catch (e) {}
+        clearLessonProgress();
+    }
+
+    const im = state.subject === 'math';
+    state.currentLesson = skillId; state.lessonSkillId = skillId;
+    state.lessonStep = 0; state.lessonCorrect = 0; state.lessonWrong = 0;
+    state.lessonTasks = generateLesson(skillId, state.subject);
+    initStepHistory();
+
+    const skill = getCurrentSkills().find(s => s.id === skillId);
+    $('#lessonTitle').textContent = (im ? '🧮 ' : '📝 ') + (skill ? skill.name : 'Урок');
+    $('#lessonContainer').className = 'lesson-container ' + (im ? 'math-lesson' : 'rus-lesson');
+    $('#lessonHeader').className = 'lesson-header ' + (im ? 'math-bar' : 'rus-bar');
+    $('#lessonNextBtn').className = 'lesson-next ' + (im ? 'math-next' : 'rus-next');
+    $('#btnLessonFinish').className = 'btn-lesson-finish ' + (im ? 'math-finish' : 'rus-finish');
+
+    updateProgressBar(); renderDots();
+    $('#lessonOverlay').classList.add('active');
+    $('#lessonNextBtn').classList.remove('show');
+    $('#lessonFinishBlock').classList.remove('show');
+    $('#lessonScene').style.display = 'flex';
+    saveLessonProgress();
+    renderLessonStep();
+}
+
+async function closeLesson() {
+    $('#lessonOverlay').classList.remove('active');
+    state.currentLesson = null; state.lessonTasks = []; stepHistory = [];
+    renderSkillTree();
+    checkAchievements((name, desc) => showAchievementToast(name, desc));
+    updateTrapsBadge();
+    saveState();
+}
+
+function unlockNext(currentSkill) {
+    const skills = getCurrentSkills();
+    const ci = skills.findIndex(s => s.id === currentSkill.id);
+    if (ci >= 0 && ci + 1 < skills.length && skills[ci + 1].status === 'locked') {
+        skills[ci + 1].status = 'current';
+        showToast('🔓', 'Новый навык открыт!', $('#toast'));
+        spawnLeaves();
+    }
+}
+
+async function renderLessonStep() {
+    const task = state.lessonTasks[state.lessonStep];
+    if (!task) { finishLesson(); return; }
+
+    $('#lessonNextBtn').classList.remove('show');
+    $('#lessonFinishBlock').classList.remove('show');
+    const scene = $('#lessonScene');
+
+    if (scene.children.length > 0) {
+        scene.classList.add('task-transition');
+        await new Promise(r => setTimeout(r, 200));
+        scene.classList.remove('task-transition');
+    }
+    scene.style.display = 'flex';
+    scene.style.animation = 'none'; scene.offsetHeight; scene.style.animation = '';
+
+    const result = await renderTask(scene, task, { isBonus: false });
+
+    if (state.lessonStep < stepHistory.length) {
+        stepHistory[state.lessonStep] = result.isCorrect ? 'correct' : 'wrong';
+    }
+
+    if (result.isCorrect) { state.lessonCorrect++; }
+    else { state.lessonWrong++; addLessonTrap(task); }
+
+    renderDots(); updateProgressBar(); saveLessonProgress();
+    setTimeout(() => $('#lessonNextBtn').classList.add('show'), 1000);
+    scene.scrollTop = 0;
+}
+
+function addLessonTrap(task) {
+    const id = 'lesson_' + state.lessonSkillId + '_' + Date.now();
+    state.traps.push({
+        id, question: task.question, options: task.options || null,
+        correct: task.correctIdx ?? null, answer: task.correctAns,
+        explanation: task.explanation,
+        source: 'Урок: ' + ($('#lessonTitle')?.textContent || 'Неизвестно'),
+        defuses: 0, nextDate: new Date().toISOString(),
+        isInput: task.type === 'input' || (task.type && task.type.startsWith('boss')),
+        subject: state.subject
+    });
+    unlockAchievement('firstBlood', (n, d) => showAchievementToast(n, d));
+    saveState();
+}
+
+function nextLessonStep() {
+    state.lessonStep++;
+    if (state.lessonStep >= state.lessonTasks.length) { finishLesson(); }
+    else { saveLessonProgress(); renderDots(); updateProgressBar(); renderLessonStep(); $('#lessonScene').scrollTop = 0; }
+}
+
+function finishLesson() {
+    clearLessonProgress();
+    $('#lessonScene').style.display = 'none';
+    $('#lessonNextBtn').classList.remove('show');
+    $('#lessonFinishBlock').classList.add('show');
+
+    const c = state.lessonCorrect, w = state.lessonWrong;
+    $('#lfinishCorrect').textContent = c; $('#lfinishWrong').textContent = w;
+    const totalTasks = state.lessonTasks.length;
+    const xp = c * GEMS.LESSON_XP_PER_CORRECT + (w === 0 ? GEMS.LESSON_PERFECT_BONUS : 0);
+    $('#lfinishXP').textContent = '+' + xp + ' 💎';
+
+    if (w === 0) {
+        $('#lfinishTitle').textContent = 'Идеально! 🌟';
+        $('#lfinishSubtitle').textContent = 'Навык пройден!';
+    } else {
+        $('#lfinishTitle').textContent = 'Урок пройден!';
+        $('#lfinishSubtitle').textContent = `${c}/${c + w} верно. Ошибки → 🪤`;
+    }
+
+    state.gems += xp; updateStats();
+    unlockAchievement('student', (n, d) => showAchievementToast(n, d));
+    if (w === 0) unlockAchievement('master', (n, d) => showAchievementToast(n, d));
+    playSound(w === 0 ? 'achievement' : 'correct', state.theme);
+
+    const skill = getCurrentSkills().find(s => s.id === state.lessonSkillId);
+    if (skill) {
+        const ratio = c / totalTasks;
+        const np = Math.min(100, skill.progress + Math.round(ratio * 100));
+        skill.progress = np;
+        if (np >= SKILL.PROGRESS_TO_COMPLETE) { skill.status = 'completed'; unlockNext(skill); }
+    }
+
+    updateProgressBar();
+    const catSpeech = $('#catSpeech');
+    if (catSpeech) catSpeech.textContent = w === 0 ? CAT_SPEECH.lessonPerfect : CAT_SPEECH.lessonDone;
+
+    stepHistory = []; updateTrapsBadge(); saveState();
+    state.currentLesson = null; state.lessonTasks = [];
+    renderSkillTree();
+}
+
+function checkSavedLesson() {
+    const saved = localStorage.getItem(LESSON_STORAGE_KEY);
+    if (!saved) return false;
+    try {
+        const progress = JSON.parse(saved);
+        if (!progress.skillId || !progress.tasks || progress.tasks.length === 0) { clearLessonProgress(); return false; }
+        const skill = getCurrentSkills().find(s => s.id === progress.skillId);
+        const skillName = skill ? skill.name : 'Неизвестно';
+        const resume = confirm(`🐱 У тебя есть незавершённый урок!\n\n📚 Тема: «${skillName}»\n📍 Пройдено: ${progress.step} из ${progress.tasks.length} заданий\n✅ Верных ответов: ${progress.correct}\n\nПродолжить урок?`);
+        if (resume && loadLessonProgress()) {
+            const im = state.subject === 'math';
+            $('#lessonTitle').textContent = (im ? '🧮 ' : '📝 ') + skillName;
+            $('#lessonContainer').className = 'lesson-container ' + (im ? 'math-lesson' : 'rus-lesson');
+            $('#lessonHeader').className = 'lesson-header ' + (im ? 'math-bar' : 'rus-bar');
+            $('#lessonNextBtn').className = 'lesson-next ' + (im ? 'math-next' : 'rus-next');
+            $('#btnLessonFinish').className = 'btn-lesson-finish ' + (im ? 'math-finish' : 'rus-finish');
+            updateProgressBar(); renderDots();
+            $('#lessonOverlay').classList.add('active');
+            $('#lessonNextBtn').classList.remove('show');
+            $('#lessonFinishBlock').classList.remove('show');
+            $('#lessonScene').style.display = 'flex';
+            renderLessonStep();
+            return true;
+        }
+    } catch (e) {}
+    clearLessonProgress();
+    return false;
+}
+
+/* === js/components/story.js === */
+const storySrc = {
+    math: { id: 'math', title: '🧮 Дело о пропавшем торте', subj: 'math', scenes: [
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'Мур! Украли торт!' },
+        { type:'choice', speaker:'Следователь', emoji:'🔍', text:'3 ряда по 8 следов.', question:'3×8=?', options:['18','24','28','32'], correctAns:'24', explanation:'3×8=24 🐾', trapId:'smul' },
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'24 следа! Трое подозреваемых.' },
+        { type:'input', speaker:'Бухгалтер', emoji:'🧾', text:'Торт 120 монет. Вор оставил половину.', question:'120÷2=?', correctAns:'60', explanation:'120÷2=60 💰', trapId:'sdiv' },
+        { type:'choice', speaker:'Сорока', emoji:'🦜', text:'4 друга × 2 куска. Торт на 8.', question:'Хватит?', options:['Да','Нет','Ровно 8','Больше'], correctAns:'Ровно 8', explanation:'4×2=8! 🍰', trapId:'slog' },
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'Енот! Дело закрыто! 🎉' }
+    ]},
+    rus1: { id:'rus1', title:'📝 Дело о пропавшей запятой', subj:'russian', scenes: [
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'Из газеты исчезли запятые!' },
+        { type:'choice', speaker:'Редактор', emoji:'📰', text:'"Кот пр...бывает".', question:'ПРЕ или ПРИ?', options:['Е','И','Ы','Э'], correctAns:'И', explanation:'ПРИбывает 🚂', trapId:'rpre' },
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'Дальше — ресторан...' },
+        { type:'choice', speaker:'Критик', emoji:'🍽️', text:'"Кури...ый суп".', question:'Н или НН?', options:['Н','НН'], correctAns:'Н', explanation:'Одна Н — суффикс -ИН- 🐔', trapId:'rnn' },
+        { type:'choice', speaker:'Секретарша', emoji:'💼', text:'"Казнить нельзя помиловать".', question:'Где запятая?', options:['Казнить, нельзя','Казнить нельзя,','Казнить нельзя помиловать,','Не нужна'], correctAns:'Казнить нельзя,', explanation:'После «нельзя»! ☠️→😇', trapId:'rcom' },
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'Язык спасён! 🎉📚' }
+    ]},
+    rus2: { id:'rus2', title:'📝 Дело о двойных согласных', subj:'russian', scenes: [
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'В библиотеке пропали буквы Н!' },
+        { type:'choice', speaker:'Библиотекарь', emoji:'📚', text:'"Стекля...ый стакан".', question:'Н или НН?', options:['Н','НН'], correctAns:'НН', explanation:'СтекляННый — исключение! 🔮', trapId:'rnn2' },
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'Ого! Исключение!' },
+        { type:'choice', speaker:'Писатель', emoji:'✍️', text:'"Ветре...ый день".', question:'Н или НН?', options:['Н','НН'], correctAns:'Н', explanation:'ВетреНый — одна Н 🌬️', trapId:'rnn3' },
+        { type:'input', speaker:'Поэт', emoji:'🎭', text:'"Пусты...ый пляж".', question:'Сколько Н?', correctAns:'нн', explanation:'ПустыННый — стык корня и суффикса 🏖️', trapId:'rnn4' },
+        { type:'dialogue', speaker:'Кот', emoji:'🐱', text:'Все буквы на месте! 🎉' }
+    ]}
+};
+
+const storyList = { math: [storySrc.math], russian: [storySrc.rus1, storySrc.rus2] };
+
+function openStoryPanel() {
+    const im = state.subject === SUBJECTS.MATH;
+    $('#storyPanelSubtitle').textContent = im ? 'Математические расследования' : 'Расследования по русскому';
+    const list = storyList[state.subject];
+    $('#storyList').innerHTML = list.map(s => {
+        const done = state.storiesCompleted[s.id];
+        const totalTasks = s.scenes.filter(x=>x.type!=='dialogue').length;
+        const badgeClass = done ? 'badge-done' : 'badge-new';
+        const badgeText = done ? '✅ Пройдено' : '🔄 Новая';
+        return `<div class="story-card" data-story="${s.id}">
+            <div class="story-card-icon">${im ? '🧮' : '📝'}</div>
+            <div class="story-card-info">
+                <div class="story-card-name">${s.title}</div>
+                <div class="story-card-desc">${totalTasks} заданий · ${s.scenes.length} сцен</div>
+            </div>
+            <span class="story-card-badge ${badgeClass}">${badgeText}</span>
+        </div>`;
+    }).join('');
+    $$('#storyList .story-card').forEach(c => c.addEventListener('click', () => startStory(c.dataset.story)));
+    $('#storyPanel').classList.add('active');
+}
+
+function startStory(id) {
+    const scr = storySrc[Object.keys(storySrc).find(k => storySrc[k].id === id)];
+    state.currentStory = id; state.storyStep = 0; state.storyAnswered = false;
+    const im = scr.subj === SUBJECTS.MATH;
+    $('#storyContainer').className = 'story-container ' + (im ? 'math-story' : 'rus-story');
+    $('#storyHeaderBar').className = 'story-header-bar ' + (im ? 'math-bar' : 'rus-bar');
+    $('#storyTitleHeader').textContent = scr.title;
+    $('#storySteps').innerHTML = Array.from({length: scr.scenes.length}, (_, i) => `<span class="step-dot ${i===0?'current':''}"></span>`).join('');
+    $('#storyNextBtn').className = 'story-next-btn ' + (im ? 'math-next' : 'rus-next');
+    $('#btnFinishStory').className = 'btn-finish-story ' + (im ? 'math-finish' : 'rus-finish');
+    $('#storyOverlay').classList.add('active');
+    $('#storyNextBtn').classList.remove('show');
+    $('#storyFinishBlock2').classList.remove('show');
+    $('#storyScene').style.display = 'flex';
+    $('#storyPanel').classList.remove('active');
+    renderStoryStep();
+}
+
+function closeStory() {
+    $('#storyOverlay').classList.remove('active');
+    state.currentStory = null;
+    checkAchievements((n, d) => showAchievementToast(n, d));
+    updateTrapsBadge();
+}
+
+async function renderStoryStep() {
+    const scr = storySrc[Object.keys(storySrc).find(k => storySrc[k].id === state.currentStory)];
+    const step = scr.scenes[state.storyStep];
+    if (!step) { finishStory(); return; }
+
+    $('#storyNextBtn').classList.remove('show');
+    $('#storyFinishBlock2').classList.remove('show');
+    $('#storyScene').style.display = 'flex';
+    state.storyAnswered = false;
+
+    let html = `<div class="scene-emoji">${step.emoji}</div><div class="scene-speaker">${step.speaker}</div><div class="scene-text">${step.text}</div>`;
+    if (step.type === 'dialogue') {
+        $('#storyScene').innerHTML = html;
+        setTimeout(() => $('#storyNextBtn').classList.add('show'), 500);
+    } else {
+        $('#storyScene').innerHTML = html;
+        const taskBox = document.createElement('div');
+        taskBox.className = 'story-task-box';
+        const taskLabel = document.createElement('div');
+        taskLabel.className = 'task-label';
+        taskLabel.textContent = step.question || 'Твоё решение:';
+        taskBox.appendChild(taskLabel);
+        $('#storyScene').appendChild(taskBox);
+
+        // Создаём задание с correctAns вместо correctIdx
+        const task = {
+            type: step.type,
+            question: step.question,
+            options: step.options,
+            correctAns: step.correctAns,
+            explanation: step.explanation
+        };
+        if (step.type === 'input') {
+            task.correctAns = step.correctAns;
+        }
+
+        const result = await renderTask(taskBox, task, { compact: true });
+        state.storyAnswered = true;
+
+        if (result.isCorrect) {
+            state.gems += GEMS.CORRECT_ANSWER;
+            updateStats();
+            setTimeout(() => $('#storyNextBtn').classList.add('show'), 1000);
+        } else {
+            if (step.trapId) addStoryTrap(step, scr.title);
+            showToast('🤔', 'Ошибка → Ловушки!', $('#toast'));
+            setTimeout(() => $('#storyNextBtn').classList.add('show'), 1800);
+        }
+    }
+    updateStorySteps();
+    $('#storyScene').scrollTop = 0;
+}
+
+function addStoryTrap(step, src) {
+    if (!step.trapId || state.traps.find(t => t.id === step.trapId)) return;
+    state.traps.push({
+        id: step.trapId,
+        question: step.question,
+        options: step.options || null,
+        correct: step.options ? step.options.indexOf(step.correctAns) : null,
+        answer: step.correctAns || null,
+        explanation: step.explanation,
+        source: src,
+        defuses: 0,
+        nextDate: new Date().toISOString(),
+        isInput: step.type === 'input',
+        subject: state.currentStory.startsWith('rus') ? SUBJECTS.RUSSIAN : SUBJECTS.MATH
+    });
+    unlockAchievement('firstBlood', (n, d) => showAchievementToast(n, d));
+    saveState();
+}
+
+function updateStorySteps() {
+    const dots = $('#storySteps').querySelectorAll('.step-dot');
+    dots.forEach((d, i) => {
+        d.classList.remove('done', 'current');
+        if (i < state.storyStep) d.classList.add('done');
+        else if (i === state.storyStep) d.classList.add('current');
+    });
+}
+
+function nextStoryStep() {
+    const scr = storySrc[Object.keys(storySrc).find(k => storySrc[k].id === state.currentStory)];
+    state.storyStep++;
+    if (state.storyStep >= scr.scenes.length) finishStory();
+    else { renderStoryStep(); $('#storyScene').scrollTop = 0; }
+}
+
+function finishStory() {
+    $('#storyScene').style.display = 'none';
+    $('#storyNextBtn').classList.remove('show');
+    $('#storyFinishBlock2').classList.add('show');
+    state.storiesCompleted[state.currentStory] = true;
+    const scr = storySrc[Object.keys(storySrc).find(k => storySrc[k].id === state.currentStory)];
+    const im = scr.subj === SUBJECTS.MATH;
+    $('#finishTitle').textContent = im ? 'Дело раскрыто!' : 'Язык спасён!';
+    $('#finishXP').textContent = im ? `+${GEMS.STORY_MATH_REWARD} 💎` : `+${GEMS.STORY_RUS_REWARD} 💎`;
+    $('#finishSubtitle').textContent = im ? 'Торт найден!' : 'Ты герой! 📚';
+    state.gems += im ? GEMS.STORY_MATH_REWARD : GEMS.STORY_RUS_REWARD;
+    updateStats();
+    $$('#storySteps .step-dot').forEach(d => { d.classList.add('done'); d.classList.remove('current'); });
+    const catSpeech = $('#catSpeech');
+    if (catSpeech) catSpeech.textContent = CAT_SPEECH.storyDone;
+    checkAchievements((n, d) => showAchievementToast(n, d));
+    updateTrapsBadge();
+    saveState();
+}
+
+/* === js/components/trap.js === */
+// js/components/trap.js
+
+
+
+
+
+
+function updateTrapsBadge() {
+    const badge = $('#trapsBadge');
+    if (!badge) return;
+    const a = getAvailableTraps().length;
+    if (a > 0) { badge.style.display = 'flex'; badge.textContent = a; }
+    else { badge.style.display = 'none'; }
+}
+
+function renderTrapsPanel() {
+    const av = getAvailableTraps();
+    const de = getDefusedTraps();
+    
+    let html = '';
+    
+    if (!av.length && !de.length) {
+        html = `
+            <div style="text-align:center;padding:40px 20px;">
+                <div style="font-size:56px;margin-bottom:16px;">🏆</div>
+                <div style="font-weight:800;font-size:16px;color:var(--text);margin-bottom:8px;">Ловушек нет!</div>
+                <div style="color:var(--text-light);font-size:13px;line-height:1.5;">Ошибайся в уроках —<br>ловушки появятся здесь</div>
+            </div>`;
+    } else {
+        if (av.length) {
+            html += '<div style="font-weight:800;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:6px;font-size:14px;"><span style="font-size:18px;">🔴</span> Нужно разобрать (' + av.length + ')</div>';
+            av.forEach(t => {
+                const subjEmoji = t.subject === 'math' ? '🧮' : '📝';
+                html += `
+                <div class="trap-item danger" data-id="${t.id}">
+                    <div class="trap-icon">🪤</div>
+                    <div class="trap-info">
+                        <div class="trap-name">${t.question}</div>
+                        <div class="trap-source">${subjEmoji} ${t.source}</div>
+                    </div>
+                    <span class="trap-status status-danger">Разобрать</span>
+                </div>`;
+            });
+        }
+        
+        if (de.length) {
+            html += '<div style="font-weight:800;color:var(--green);margin:16px 0 10px;display:flex;align-items:center;gap:6px;font-size:14px;"><span style="font-size:18px;">🟢</span> Разобраны (' + de.length + ')</div>';
+            de.forEach(t => {
+                const subjEmoji = t.subject === 'math' ? '🧮' : '📝';
+                html += `
+                <div class="trap-item defused">
+                    <div class="trap-icon">✅</div>
+                    <div class="trap-info">
+                        <div class="trap-name">${t.question}</div>
+                        <div class="trap-source">${subjEmoji} ${t.source}</div>
+                    </div>
+                    <span class="trap-status status-defused">Готово</span>
+                </div>`;
+            });
+        }
+    }
+    
+    $('#trapsList').innerHTML = html;
+    $('#trapsSubtitle').textContent = av.length ? `${av.length} ловушка(и) ждёт разбора` : 'Все ловушки разобраны!';
+    
+    $$('#trapsList .trap-item.danger').forEach(el => {
+        el.addEventListener('click', () => {
+            const t = state.traps.find(x => x.id === el.dataset.id);
+            if (t) openTrapQuiz(t);
+        });
+    });
+}
+
+function openTrapQuiz(trap) {
+    const catEmoji = state.theme === 'forest' ? '🦊' : state.theme === 'space' ? '🚀' : state.theme === 'underwater' ? '🐙' : '🐱';
+    
+    let html = `
+        <div style="text-align:center;margin-bottom:12px;">
+            <div style="font-size:40px;margin-bottom:4px;">${catEmoji}</div>
+            <div style="font-weight:800;font-size:14px;color:var(--text);">Кот-Учёный</div>
+            <div style="font-size:12px;color:var(--text-light);margin-bottom:12px;">«Ой, тут мы ошиблись! Давай разберёмся вместе…»</div>
+        </div>
+        <div style="text-align:center;font-weight:700;font-size:13px;color:var(--text);margin-bottom:16px;line-height:1.5;padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--text-light);">
+            ${trap.question}
+        </div>`;
+    
+    if (trap.isInput) {
+        html += `
+            <div class="task-input-row">
+                <input type="text" class="task-input" id="tqInp" placeholder="Ответ" autocomplete="off" style="color:var(--text);background:var(--bg);border-color:var(--text-light);">
+                <button class="btn-submit" id="tqSub">✓</button>
+            </div>`;
+    } else {
+        html += `<div class="task-options" id="tqOpts">`;
+        trap.options.forEach((o, i) => {
+            html += `<button class="task-option" data-idx="${i}" style="color:var(--text);border-color:var(--text-light);">${o}</button>`;
+        });
+        html += `</div>`;
+    }
+    
+    html += `
+        <div class="lesson-explanation" id="tqExpl"></div>
+        <button class="panel-close" id="tqClose" style="margin-top:12px;">Закрыть</button>`;
+    
+    $('#trapQuizCard').innerHTML = html;
+    $('#trapQuizOverlay').classList.add('active');
+
+    const expl = $('#tqExpl');
+    let done = false;
+
+    const success = () => {
+        trap.defuses++;
+        
+        const reward = GEMS.TRAP_BASE_REWARD + trap.defuses * GEMS.TRAP_DEFUSE_MULTIPLIER;
+        state.gems += reward;
+        updateStats();
+
+        if (trap.defuses === 1 && trap.id && trap.id.startsWith('lesson_')) {
+            const parts = trap.id.split('_');
+            if (parts.length >= 2) {
+                const skillId = parts[1];
+                let skill = state.skills.math.find(s => s.id === skillId) || state.skills.russian.find(s => s.id === skillId);
+                if (skill && skill.status === 'current' && skill.progress < 100) {
+                    const allTraps = state.traps.filter(t => t.id && t.id.startsWith('lesson_' + skillId + '_'));
+                    const defusedCount = allTraps.filter(t => t.defuses >= 1).length;
+                    const totalTraps = allTraps.length;
+                    const remaining = 100 - skill.progress;
+                    const remainingTraps = totalTraps - defusedCount + 1;
+                    const progressForThis = Math.min(20, Math.ceil(remaining / remainingTraps));
+                    skill.progress = Math.min(100, skill.progress + progressForThis);
+                    if (skill.progress >= 100) {
+                        skill.status = 'completed';
+                        const subject = trap.subject || state.subject;
+                        const skills = state.skills[subject];
+                        const ci = skills.findIndex(s => s.id === skillId);
+                        if (ci >= 0 && ci + 1 < skills.length && skills[ci + 1].status === 'locked') {
+                            skills[ci + 1].status = 'current';
+                            showToast('🔓', 'Новый навык открыт через ловушки!', $('#toast'));
+                            spawnLeaves();
+                        }
+                    }
+                    saveState();
+                    renderSkillTree();
+                }
+            }
+        }
+
+        showToast(
+            trap.defuses >= TRAP.MAX_DEFUSES ? '🏆' : '✅',
+            trap.defuses >= TRAP.MAX_DEFUSES ? 'Ловушка разобрана!' : `+${reward} 💎`,
+            $('#toast')
+        );
+        checkAchievements((n, d) => showAchievementToast(n, d));
+        updateTrapsBadge();
+        renderTrapsPanel();
+        saveState();
+        setTimeout(() => $('#trapQuizOverlay').classList.remove('active'), 600);
+    };
+
+    if (trap.isInput) {
+        const inp = $('#tqInp');
+        const btn = $('#tqSub');
+        const submit = () => {
+            if (done) return;
+            done = true;
+            btn.disabled = true;
+            inp.disabled = true;
+            if (inp.value.trim().toLowerCase() === String(trap.answer).toLowerCase()) {
+                inp.style.borderColor = 'var(--green)';
+                inp.style.background = 'rgba(16,185,129,0.2)';
+                expl.innerHTML = `<div style="font-size:24px;margin-bottom:4px;">${catEmoji}</div><div>«Отлично! А знаешь почему?»</div><div style="margin-top:6px;font-weight:700;">✅ ${trap.explanation}</div>`;
+                expl.className = 'lesson-explanation show good';
+                success();
+            } else {
+                inp.style.borderColor = 'var(--red)';
+                inp.style.background = 'rgba(239,68,68,0.15)';
+                expl.innerHTML = `<div style="font-size:24px;margin-bottom:4px;">${catEmoji}</div><div>«Вот тут подвох! Смотри…»</div><div style="margin-top:6px;font-weight:700;">🤔 ${trap.explanation}</div><div style="margin-top:4px;">✅ Правильный ответ: ${trap.answer}</div>`;
+                expl.className = 'lesson-explanation show bad';
+            }
+        };
+        btn.addEventListener('click', submit);
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+        setTimeout(() => inp.focus(), 300);
+    } else {
+        const opts = $$('#tqOpts .task-option');
+        opts.forEach(o => o.addEventListener('click', () => {
+            if (done) return;
+            done = true;
+            opts.forEach(x => x.style.pointerEvents = 'none');
+            const idx = parseInt(o.dataset.idx);
+            if (idx === trap.correct) {
+                o.classList.add('correct-pick');
+                expl.innerHTML = `<div style="font-size:24px;margin-bottom:4px;">${catEmoji}</div><div>«Отлично! А знаешь почему?»</div><div style="margin-top:6px;font-weight:700;">✅ ${trap.explanation}</div>`;
+                expl.className = 'lesson-explanation show good';
+                success();
+            } else {
+                o.classList.add('wrong-pick');
+                opts[trap.correct].classList.add('correct-pick');
+                expl.innerHTML = `<div style="font-size:24px;margin-bottom:4px;">${catEmoji}</div><div>«Вот тут подвох! Смотри…»</div><div style="margin-top:6px;font-weight:700;">🤔 ${trap.explanation}</div>`;
+                expl.className = 'lesson-explanation show bad';
+            }
+        }));
+    }
+    $('#tqClose').addEventListener('click', () => {
+        $('#trapQuizOverlay').classList.remove('active');
+        updateTrapsBadge();
+        renderTrapsPanel();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const overlay = $('#trapQuizOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+                updateTrapsBadge();
+                renderTrapsPanel();
+            }
+        });
+    }
+});
+
+/* === js/components/profile.js === */
+// js/components/profile.js
+
+
+
+
+
+function renderProfile() {
+    const im = state.subject === SUBJECTS.MATH;
+    const done = (state.storiesCompleted.math ? 1 : 0) + (state.storiesCompleted.rus1 ? 1 : 0) + (state.storiesCompleted.rus2 ? 1 : 0);
+    const def = state.traps.reduce((s, t) => s + t.defuses, 0);
+    const unl = Object.values(state.achievements).filter(a => a.unlocked).length;
+    const total = Object.values(state.achievements).length;
+    const totalLessons = countCompletedLessons(state.skills[SUBJECTS.MATH]) + countCompletedLessons(state.skills[SUBJECTS.RUSSIAN]);
+
+    let html = `
+    <div class="profile-hero">
+        <div class="profile-avatar">${im ? '🐱' : '😺'}</div>
+        <div class="profile-name">Кот Учёный</div>
+        <div class="profile-role">${im ? 'Математик' : 'Филолог'} · Уровень ${totalLessons + 1}</div>
+        <div class="profile-stats-row">
+            <div class="profile-stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-value">${totalLessons}</div>
+                <div class="stat-label">Уроков</div>
+            </div>
+            <div class="profile-stat-card">
+                <div class="stat-icon">🧮</div>
+                <div class="stat-value">${done}</div>
+                <div class="stat-label">Историй</div>
+            </div>
+            <div class="profile-stat-card">
+                <div class="stat-icon">🪤</div>
+                <div class="stat-value">${def}</div>
+                <div class="stat-label">Ловушек</div>
+            </div>
+            <div class="profile-stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-value">${unl}</div>
+                <div class="stat-label">Ачивок</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <div class="profile-section-title">
+            <span>🏆</span> Достижения <span class="section-badge">${unl}/${total}</span>
+        </div>
+        <div class="ach-grid">`;
+
+    Object.values(state.achievements).forEach(a => {
+        const cls = a.unlocked ? 'unlocked' : 'locked';
+        const icon = a.unlocked ? a.name.split(' ')[0] : '🔒';
+        const name = a.name.split(' ').slice(1).join(' ');
+        html += `
+        <div class="ach-item ${cls}">
+            <div class="ach-icon">${icon}</div>
+            <div class="ach-name">${name}</div>
+            <div class="ach-desc">${a.desc}</div>
+        </div>`;
+    });
+
+    // Селектор тем
+    html += `
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <div class="profile-section-title"><span>🎨</span> Оформление</div>
+        <div class="theme-grid">`;
+
+    const totalDone = countCompletedLessons(state.skills[SUBJECTS.MATH]) + countCompletedLessons(state.skills[SUBJECTS.RUSSIAN]);
+    Object.values(THEMES).forEach(t => {
+        const isUnlocked = t.unlocked || (t.unlockAt && totalDone >= t.unlockAt);
+        const isActive = state.theme === t.id;
+        const lockEmoji = isUnlocked ? '' : `<span class="theme-lock">🔒</span>`;
+        html += `
+        <div class="theme-card ${isActive ? 'active' : ''} ${isUnlocked ? '' : 'locked'}" data-theme="${t.id}" data-unlocked="${isUnlocked ? '1' : '0'}">
+            ${lockEmoji}
+            <div class="theme-emoji">${t.catEmoji}</div>
+            <div class="theme-name">${t.name}</div>
+        </div>`;
+    });
+
+    html += `
+        </div>
+    </div>
+    <button class="reset-progress-btn" id="resetProgressBtn">🔄 Сбросить прогресс</button>`;
+
+    $('#profileContent').innerHTML = html;
+
+    // Переключение тем
+    $$('.theme-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const themeId = card.dataset.theme;
+            const unlocked = card.dataset.unlocked === '1';
+            if (!unlocked) {
+                const t = THEMES[themeId];
+                showToast('🔒', `Разблокируется после ${t.unlockAt} уроков`, $('#toast'));
+                return;
+            }
+            applyTheme(themeId);
+            saveState();
+            // Обновляем активную карточку
+            $$('.theme-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            // Обновляем шапку под текущий предмет
+            const im = state.subject === SUBJECTS.MATH;
+            const headerBar = document.getElementById('headerBar');
+            const catStage = document.getElementById('catStage');
+            if (headerBar) headerBar.className = 'header ' + (im ? 'math-header' : 'rus-header');
+            if (catStage) catStage.className = 'cat-stage ' + (im ? 'math-stage' : 'rus-stage');
+            const btnMath = document.getElementById('btnMath');
+            const btnRus = document.getElementById('btnRus');
+            if (btnMath) btnMath.classList.toggle('active', im);
+            if (btnRus) btnRus.classList.toggle('active', !im);
+            const appEl = document.getElementById('app');
+            if (appEl) appEl.className = 'app' + (im ? '' : ' rus-mode');
+            const catSpeech = document.getElementById('catSpeech');
+            if (catSpeech) catSpeech.textContent = im ? CAT_SPEECH.math : CAT_SPEECH.russian;
+        });
+    });
+
+    // Сброс прогресса
+    $('#resetProgressBtn').addEventListener('click', () => {
+        if (confirm('Точно сбросить ВЕСЬ прогресс? Это нельзя отменить!')) {
+            if (confirm('Последний шанс. Сбросить?')) {
+                resetAllProgress();
+                renderProfile();
+                renderSkillTree();
+                updateStats();
+                const catSpeech = $('#catSpeech');
+                const catBody = $('#catBody');
+                if (catSpeech) catSpeech.textContent = 'Мур! Начинаем заново!';
+                if (catBody) catBody.textContent = '🐱';
+                document.getElementById('headerBar').className = 'header math-header';
+                document.getElementById('catStage').className = 'cat-stage math-stage';
+                document.getElementById('app').classList.remove('rus-mode');
+            }
+        }
+    });
+}
+
+/* === js/app.js === */
+// js/app.js
+
+
+
+
+
+
+
+
+
+
+function updateStats() {
+    const oldGems = parseInt($('#gemCount').textContent) || state.gems;
+    $('#gemCount').textContent = state.gems;
+    $('#streakCount').textContent = state.streak;
+    
+    // Огонёк при streak >= 7
+    const streakEl = $('#streakCount');
+    if (streakEl) {
+        if (state.streak >= 7) {
+            streakEl.classList.add('streak-fire');
+        } else {
+            streakEl.classList.remove('streak-fire');
+        }
+    }
+    
+    // Гемы летят
+    if (state.gems > oldGems) {
+        const diff = state.gems - oldGems;
+        const gemEl = $('#gemCount');
+        if (gemEl && diff > 0) {
+            const rect = gemEl.getBoundingClientRect();
+            spawnGems(Math.min(diff, 5), rect.left, rect.top - 30, gemEl);
+        }
+    }
+}
+
+function showAchievementToast(name, desc) {
+    const toast = document.getElementById('achToast');
+    const text = document.getElementById('achToastText');
+    if (!toast || !text) return;
+    text.textContent = name + ' — ' + desc;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+function setCatMood(mood) {
+    const catBody = $('#catBody');
+    if (!catBody) return;
+
+    const moods = {
+        happy: '😺',
+        proud: '😸',
+        love: '😻',
+        sad: '😿',
+        wow: '🙀',
+        normal: state.subject === SUBJECTS.MATH ? '🐱' : '😺'
+    };
+
+    const emoji = moods[mood] || moods.normal;
+    catBody.textContent = emoji;
+
+    catBody.style.transform = 'scale(1.2)';
+    setTimeout(() => { catBody.style.transform = 'scale(1)'; }, 200);
+
+    clearTimeout(catBody._moodTimeout);
+    catBody._moodTimeout = setTimeout(() => {
+        catBody.textContent = moods.normal;
+    }, 2000);
+}
+
+function updateSubjectUI() {
+    const im = state.subject === SUBJECTS.MATH;
+    $('#headerBar').className = 'header ' + (im ? 'math-header' : 'rus-header');
+    $('#catStage').className = 'cat-stage ' + (im ? 'math-stage' : 'rus-stage');
+    $('#btnMath').classList.toggle('active', im);
+    $('#btnRus').classList.toggle('active', !im);
+    $('#app').className = 'app' + (im ? '' : ' rus-mode');
+    const catSpeech = $('#catSpeech');
+    const catBody = $('#catBody');
+    if (catSpeech) catSpeech.textContent = im ? CAT_SPEECH.math : CAT_SPEECH.russian;
+    if (catBody) {
+        const theme = getTheme(state.theme);
+        catBody.textContent = theme.catEmoji || SUBJECT_EMOJI[state.subject];
+    }
+}
+
+function setupCatPet() {
+    const catBody = $('#catBody');
+    const catSpeech = $('#catSpeech');
+    if (!catBody || !catSpeech) return;
+
+    catBody.addEventListener('click', () => {
+        catBody.classList.add('petted');
+        setTimeout(() => catBody.classList.remove('petted'), 600);
+        state.totalPets++;
+        playSound('pet', state.theme);
+        setCatMood('love');
+        checkAchievements((name, desc) => showAchievementToast(name, desc));
+
+        const particle = document.createElement('span');
+        particle.className = 'hearts-particle';
+        particle.textContent = ['❤️', '💕', '✨', '💖'][Math.floor(Math.random() * 4)];
+        particle.style.left = (Math.random() * 30 - 10) + 'px';
+        catBody.appendChild(particle);
+        setTimeout(() => particle.remove(), 1200);
+
+        catSpeech.textContent = CAT_SPEECH.pet(state.totalPets);
+        saveState();
+    });
+}
+
+function bindEvents() {
+    $('#btnMath').addEventListener('click', () => {
+        if (state.subject !== SUBJECTS.MATH) {
+            state.subject = SUBJECTS.MATH;
+            state.subjectSwitches++;
+            if (state.subjectSwitches >= 5) unlockAchievement('erudite', (n, d) => showAchievementToast(n, d));
+            updateSubjectUI();
+            renderSkillTree();
+            updateTrapsBadge();
+            saveState();
+        }
+    });
+
+    $('#btnRus').addEventListener('click', () => {
+        if (state.subject !== SUBJECTS.RUSSIAN) {
+            state.subject = SUBJECTS.RUSSIAN;
+            state.subjectSwitches++;
+            if (state.subjectSwitches >= 5) unlockAchievement('erudite', (n, d) => showAchievementToast(n, d));
+            updateSubjectUI();
+            renderSkillTree();
+            updateTrapsBadge();
+            saveState();
+        }
+    });
+
+    const setActiveNav = (btn) => { $$('.nav-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); };
+
+    $('#navHome').addEventListener('click', () => setActiveNav($('#navHome')));
+    $('#navStories').addEventListener('click', () => { setActiveNav($('#navStories')); openStoryPanel(); });
+    $('#navTraps').addEventListener('click', () => { setActiveNav($('#navTraps')); renderTrapsPanel(); $('#trapsPanel').classList.add('active'); });
+    $('#navProfile').addEventListener('click', () => { setActiveNav($('#navProfile')); renderProfile(); $('#profilePanel').classList.add('active'); });
+
+    $('#btnStoryPanelClose').addEventListener('click', () => $('#storyPanel').classList.remove('active'));
+    $('#btnTrapsPanelClose').addEventListener('click', () => $('#trapsPanel').classList.remove('active'));
+    $('#btnProfilePanelClose').addEventListener('click', () => $('#profilePanel').classList.remove('active'));
+
+    $('#trapQuizOverlay').addEventListener('click', e => { if (e.target === $('#trapQuizOverlay')) { $('#trapQuizOverlay').classList.remove('active'); updateTrapsBadge(); renderTrapsPanel(); } });
+
+    $('#lessonCloseBtn').addEventListener('click', closeLesson);
+    $('#lessonNextBtn').addEventListener('click', nextLessonStep);
+    $('#btnLessonFinish').addEventListener('click', closeLesson);
+
+    $('#storyNextBtn').addEventListener('click', nextStoryStep);
+    $('#storyCloseBtn').addEventListener('click', closeStory);
+    $('#btnFinishStory').addEventListener('click', closeStory);
+}
+
+function updateDailyStreak() {
+    const today = new Date().toDateString();
+    const lastVisit = localStorage.getItem('kot_ucheniy_last_visit');
+    
+    if (!lastVisit) {
+        // Первый визит
+        state.streak = 1;
+    } else if (lastVisit === today) {
+        // Уже заходил сегодня — ничего не делаем
+        return;
+    } else {
+        const lastDate = new Date(lastVisit);
+        const diffDays = Math.floor((new Date() - lastDate) / 86400000);
+        
+        if (diffDays === 1) {
+            // Заходил вчера — увеличиваем streak
+            state.streak++;
+        } else {
+            // Пропустил день — сброс
+            state.streak = 1;
+        }
+    }
+    
+    localStorage.setItem('kot_ucheniy_last_visit', today);
+    saveState();
+    updateStats();
+    
+    if (state.streak >= 7) {
+        showAchievementToast('🔥 Ударный режим!', `${state.streak} дней подряд!`);
+    }
+}
+
+function init() {
+    loadState();
+    // Применяем тему
+    applyTheme(state.theme || 'light');
+    // Проверяем разблокировку тем
+    checkThemeUnlocks();
+    // Ежедневный streak
+    updateDailyStreak();
+    // Приветственное мяу
+    setTimeout(() => playSound('meow', state.theme), 500);
+    updateSubjectUI();
+    renderSkillTree();
+    updateTrapsBadge();
+    updateStats();
+    setupCatPet();
+    bindEvents();
+    startTutorial();
+    setTimeout(() => checkSavedLesson(), 500);
+    console.log('🐱 v15 — готов к мурчанию!');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+    
+</body>
+</html>
