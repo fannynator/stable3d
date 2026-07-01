@@ -2,12 +2,20 @@ import type { Skill } from "../../types";
 
 interface SkillCardProps {
   skill: Skill;
+  stars: number;
   onClick?: () => void;
 }
 
-export function SkillCard({ skill, onClick }: SkillCardProps) {
+export function SkillCard({ skill, stars, onClick }: SkillCardProps) {
   const pct = skill.progress;
-  const statusText = pct >= 100 ? "Пройдено" : pct > 0 ? `${pct}%` : skill.status === "current" ? "Готово 🚀" : "Не начато";
+  const statusText =
+    pct >= 100
+      ? "✅ Пройдено"
+      : pct > 0
+      ? `${pct}% · ${stars}/3 ⭐`
+      : skill.status === "current"
+      ? "🚀 Доступно"
+      : "🔒 Закрыто";
 
   return (
     <div
@@ -32,11 +40,22 @@ export function SkillCard({ skill, onClick }: SkillCardProps) {
         <div className="text-5xl mt-1 relative z-10 drop-shadow-[0_3px_8px_rgba(0,0,0,0.22)]">{skill.icon}</div>
         <div className="text-white font-black text-center text-xs leading-tight relative z-10 mt-1">{skill.name}</div>
 
-        <div className="w-full mt-2 relative z-10">
+        {/* 3-star indicator */}
+        {skill.status !== "locked" && (
+          <div className="flex gap-1 my-1 relative z-10">
+            {[1, 2, 3].map(i => (
+              <span key={i} className={`text-sm transition-all duration-300 ${i <= stars ? "opacity-100 scale-110 drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]" : "opacity-25 scale-75"}`}>
+                ⭐
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="w-full mt-1 relative z-10">
           <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
             <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: "rgba(255,255,255,0.85)" }} />
           </div>
-          <div className="text-white/80 text-[10px] font-bold text-center mt-1">{statusText}</div>
+          <div className="text-white/80 text-[10px] font-bold text-center mt-0.5">{statusText}</div>
         </div>
       </div>
     </div>

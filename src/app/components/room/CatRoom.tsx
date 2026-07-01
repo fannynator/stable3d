@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { CatState } from "../../types";
-import { Cat3D } from "./Cat3D";
+import { CatRoomScene } from "../../../engine/three/cat-room";
 import { InteractiveZone, ZONES } from "./InteractiveZone";
 import { RoomBackground } from "./RoomBackground";
 import { PetCollection } from "./PetCollection";
@@ -129,7 +129,13 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
         />
       ))}
 
-      <Cat3D mood={cat.mood} onClick={handleCatClick} />
+      <CatRoomScene
+        mood={cat.mood}
+        gems={gems}
+        hunger={cat.hunger}
+        energy={cat.energy}
+        onPetCat={handleCatClick}
+      />
 
       {currentHat && (
         <div className="absolute bottom-[38%] left-1/2 -translate-x-1/2 text-[clamp(28px,5vw,48px)] z-[61] pointer-events-none select-none"
@@ -198,12 +204,6 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
           className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-2xl text-white text-[13px] flex items-center gap-1 active:scale-95 transition-transform">
           🐾 {ownedPetIds.length}
         </button>
-        <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-2xl text-white text-[13px] flex items-center gap-1">
-          🍖 {Math.round(cat.hunger)}%
-        </div>
-        <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-2xl text-white text-[13px] flex items-center gap-1">
-          ⚡ {Math.round(cat.energy)}%
-        </div>
       </div>
 
       {showHatShop && <HatShop gems={gems} ownedHats={cat.ownedHats} equippedHat={cat.hat} onBuy={onBuyHat} onEquip={(hat) => onUpdateCat({ hat })} onClose={() => setShowHatShop(false)} />}

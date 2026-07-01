@@ -6,26 +6,10 @@ import {
   DEFAULT_THEME, DEFAULT_CAT,
   THEMES, GEMS, TRAP, SKILL, PET_DEFS,
 } from "./config";
+import { deriveCatMood, decayCat } from "../core/player/cat";
 
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
-}
-
-function deriveCatMood(cat: CatState): CatMood {
-  if (cat.energy < 20) return "sleepy";
-  if (cat.hunger < 20) return "hungry";
-  if (cat.hunger > 70 && cat.energy > 70) return "playful";
-  return "happy";
-}
-
-function decayCat(cat: CatState): CatState {
-  const elapsed = (Date.now() - cat.lastUpdate) / 1000 / 60;
-  return {
-    ...cat,
-    hunger: Math.max(0, cat.hunger - elapsed * 0.5),
-    energy: Math.max(0, cat.energy - elapsed * 0.3),
-    lastUpdate: Date.now(),
-  };
 }
 
 function createDefaultState(): GameState {
