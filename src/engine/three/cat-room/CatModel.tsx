@@ -108,10 +108,12 @@ export function CatModel({ mood, onClick, lookTarget, onReady }: CatModelProps) 
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
-    const targetSize = 20;
+    const targetSize = 30;
     const s = targetSize / maxDim;
     group.scale.setScalar(s);
     group.position.sub(center.clone().multiplyScalar(s));
+    // Lift model so feet touch floor plane (y=0)
+    group.position.y += targetSize * 0.15;
 
     // Frustum culling off for skinned meshes + find eye bones
     group.traverse((child) => {

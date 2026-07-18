@@ -49,9 +49,8 @@ export function CatRoomScene({ mood, gems, hunger, energy, onPetCat }: CatRoomSc
             height: "42%",
             zIndex: 1,
           }}
-          dpr={[0.5, 1]}
-          gl={{ alpha: true, antialias: false, toneMappingExposure: 1.2 }}
-          onCreated={() => setModelLoaded(true)}
+          dpr={[1, 1.5]}
+          gl={{ alpha: true, antialias: true, toneMappingExposure: 1.2 }}
         >
           {/* Lighting */}
           <ambientLight intensity={1.5} />
