@@ -97,10 +97,12 @@ export function CatModel({ mood, onClick, lookTarget, onReady }: CatModelProps) 
   const groupRef = useRef<THREE.Group>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const eyeBonesRef = useRef<THREE.Bone[]>([]);
+  const scaledRef = useRef(false);
   const { scene, animations } = useGLTF(MODEL_PATH);
 
   useEffect(() => {
-    if (!groupRef.current) return;
+    if (!groupRef.current || scaledRef.current) return;
+    scaledRef.current = true;
     const group = groupRef.current;
 
     // Fit model within target size (matching original Cat3D scaling logic)
@@ -108,12 +110,10 @@ export function CatModel({ mood, onClick, lookTarget, onReady }: CatModelProps) 
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
-    const targetSize = 30;
+    const targetSize = 20;
     const s = targetSize / maxDim;
     group.scale.setScalar(s);
     group.position.sub(center.clone().multiplyScalar(s));
-    // Lift model so feet touch floor plane (y=0)
-    group.position.y += targetSize * 0.15;
 
     // Frustum culling off for skinned meshes + find eye bones
     group.traverse((child) => {

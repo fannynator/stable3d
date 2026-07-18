@@ -15,6 +15,8 @@ export function CatRoomScene({ mood, gems, hunger, energy, onPetCat }: CatRoomSc
   const [modelLoaded, setModelLoaded] = useState(false);
   const lookRef = useRef({ x: 0, y: 0 });
 
+  const handleModelReady = useCallback(() => setModelLoaded(true), []);
+
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     const target = e.currentTarget;
     const rect = target.getBoundingClientRect();
@@ -49,8 +51,8 @@ export function CatRoomScene({ mood, gems, hunger, energy, onPetCat }: CatRoomSc
             height: "42%",
             zIndex: 1,
           }}
-          dpr={[1, 1.5]}
-          gl={{ alpha: true, antialias: true, toneMappingExposure: 1.2 }}
+          dpr={[0.5, 1]}
+          gl={{ alpha: true, antialias: false, toneMappingExposure: 1.2 }}
         >
           {/* Lighting */}
           <ambientLight intensity={1.5} />
@@ -58,7 +60,7 @@ export function CatRoomScene({ mood, gems, hunger, energy, onPetCat }: CatRoomSc
           <directionalLight position={[-15, 15, -10]} intensity={1.5} color="#a78bfa" />
 
           <Suspense fallback={null}>
-            <CatModel mood={mood} onClick={onPetCat} lookTarget={lookRef} onReady={() => setModelLoaded(true)} />
+            <CatModel mood={mood} onClick={onPetCat} lookTarget={lookRef} onReady={handleModelReady} />
           </Suspense>
         </Canvas>
       </div>
