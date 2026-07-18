@@ -41,7 +41,7 @@ export function CatRoomScene({ mood, gems, hunger, energy, onPetCat }: CatRoomSc
         onPointerLeave={handlePointerLeave}
       >
         <Canvas
-          camera={{ position: [0, 4, 18], fov: 50 }}
+          camera={{ position: [0, 4, 24], fov: 50 }}
           style={{
             position: "absolute",
             bottom: "18%",
