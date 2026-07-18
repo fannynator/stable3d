@@ -1,5 +1,6 @@
 import type { CatMood } from "../types";
 import { CatAvatar3D } from "../../engine/three/cat-room/CatAvatar3D";
+import { useRef, useCallback } from "react";
 
 interface TopBarProps {
   gems: number;
@@ -11,6 +12,7 @@ interface TopBarProps {
   phrase: string;
   subject: "math" | "russian";
   onSubjectChange: (s: "math" | "russian") => void;
+  onParentAccess?: () => void;
 }
 
 // ── Static star positions (deterministic) ──
@@ -29,7 +31,16 @@ const DRIFT = Array.from({ length: 6 }, (_, i) => ({
   ch: ["✨", "💫", "⭐", "🌟", "✦", "✨"][i],
 }));
 
-export function TopBar({ gems, streak, catMood, xp, xpLabel, level, phrase, subject, onSubjectChange }: TopBarProps) {
+export function TopBar({ gems, streak, catMood, xp, xpLabel, level, phrase, subject, onSubjectChange, onParentAccess }: TopBarProps) {
+  const longPressTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleTitleDown = useCallback(() => {
+    longPressTimer.current = setTimeout(() => onParentAccess?.(), 2000);
+  }, [onParentAccess]);
+
+  const handleTitleUp = useCallback(() => {
+    clearTimeout(longPressTimer.current);
+  }, []);
   return (
     <div
       className="relative flex-shrink-0 overflow-hidden"
@@ -57,7 +68,9 @@ export function TopBar({ gems, streak, catMood, xp, xpLabel, level, phrase, subj
       {/* ── Top bar: title + stats ── */}
       <div className="flex items-start justify-between px-5 pt-5 pb-2 relative z-10">
         <div>
-          <div className="text-white font-black text-2xl leading-tight tracking-tight drop-shadow">Кот Учёный</div>
+          <div className="text-white font-black text-2xl leading-tight tracking-tight drop-shadow select-none"
+            onMouseDown={handleTitleDown} onMouseUp={handleTitleUp} onMouseLeave={handleTitleUp}
+            onTouchStart={handleTitleDown} onTouchEnd={handleTitleUp}>Кот Учёный</div>
           <div className="text-purple-200 text-xs font-bold mt-0.5">⚡ Уровень {level}</div>
         </div>
         <div className="flex items-center gap-2 mt-1">
@@ -75,7 +88,7 @@ export function TopBar({ gems, streak, catMood, xp, xpLabel, level, phrase, subj
       {/* ── 3D Cat avatar + speech bubble ── */}
       <div className="flex items-end gap-3 px-5 pb-3 relative z-10">
         <div className="flex-shrink-0" style={{ width: 70, height: 70 }}>
-          <CatAvatar3D mood={catMood} size={70} />
+          <CatAvatar3D mood={catMood} size={75} />
         </div>
         <div className="flex-1 mb-2 relative">
           <div className="bg-white rounded-3xl rounded-bl-sm px-4 py-3 shadow-xl shadow-black/15">

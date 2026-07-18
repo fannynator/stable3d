@@ -29,5 +29,6 @@ export type { DifficultyMode } from "./fgos/adaptive";
 // AI Structured Outputs
 export type { AIStructuredTask } from "./tasks/ai-schema";
 export { AI_TASK_JSON_SCHEMA, validateAITask } from "./tasks/ai-schema";
-export { generateAILesson, generateAITask } from "./tasks/ai-adapter";
-export { fetchTaskFromAI } from "./tasks/openrouter";
+export { generateAILesson, generateAISession } from "./tasks/ai-adapter";
+export { fetchTaskFromDeepSeek } from "./tasks/deepseek";
+export { fetchTaskFromLlama, isLlamaAvailable } from "./tasks/local-llama";

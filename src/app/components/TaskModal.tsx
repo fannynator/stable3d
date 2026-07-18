@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { AIStructuredTask } from "../../core/tasks/ai-schema";
+import { catSpeak, catStop, catListen, catPrefetch, catSpeakCached, catClearCache } from "../voice";
 
 interface TaskModalProps {
   tasks: AIStructuredTask[];
@@ -28,6 +29,7 @@ export function TaskModal({ tasks, currentIndex, source, correctCount, wrongCoun
   const [phase, setPhase] = useState<Phase>("question");
   const [isClosing, setIsClosing] = useState(false);
   const [earnedStar, setEarnedStar] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   const isSessionEnd = currentIndex >= tasks.length;
   const total = tasks.length;
@@ -38,20 +40,61 @@ export function TaskModal({ tasks, currentIndex, source, correctCount, wrongCoun
   useEffect(() => {
     setSelectedIndex(null);
     setPhase("question");
+
+    if (task && !isSessionEnd && task.catNarrative) {
+      // Play cached or generate live
+      catSpeakCached(`task_${currentIndex}`, task.catNarrative);
+    }
+
+    // Prefetch next task's audio in background
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < tasks.length && tasks[nextIndex]?.catNarrative) {
+      catPrefetch(`task_${nextIndex}`, tasks[nextIndex].catNarrative);
+    }
+
+    // Prefetch feedback phrases for instant response
+    catPrefetch("feedback_correct", "Молодец! Всё верно! Мур!");
+    catPrefetch("feedback_wrong", "Ничего страшного! Попробуй ещё раз! Мяу!");
   }, [currentIndex]);
+
+  // Stop speech and clear cache on unmount
+  useEffect(() => () => { catStop(); catClearCache(); }, []);
 
   const handleSelect = useCallback((index: number) => {
     if (phase !== "question" || !task) return;
     setSelectedIndex(index);
     const correct = index === task.correctIndex;
     setPhase(correct ? "correct" : "wrong");
+    // Play feedback phrase from cache (prefetched in useEffect)
+    if (correct) {
+      catSpeakCached("feedback_correct", "Молодец! Всё верно! Мур!");
+    } else {
+      catSpeakCached("feedback_wrong", "Ничего страшного! Попробуй ещё раз! Мяу!");
+    }
     onAnswer(correct);
   }, [phase, task, onAnswer]);
 
   const handleClose = useCallback(() => {
     setIsClosing(true);
+    catClearCache();
     setTimeout(onClose, 300);
   }, [onClose]);
+
+  const handleMic = useCallback(async () => {
+    if (isListening) return;
+    catStop();
+    setIsListening(true);
+    try {
+      const text = await catListen();
+      if (text) {
+        await catSpeak(`Мур! Ты сказал: «${text}». Мяу!`);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setIsListening(false);
+    }
+  }, [isListening]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -154,8 +197,14 @@ export function TaskModal({ tasks, currentIndex, source, correctCount, wrongCoun
           <>
             {/* Question */}
             <div className="px-5 pb-2">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-3">
-                <p className="text-white text-[15px] font-semibold leading-relaxed">{task?.question}</p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-3 flex items-start gap-2">
+                <p className="text-white text-base font-semibold leading-relaxed flex-1">{task?.question}</p>
+                <button onClick={() => task && catSpeak(task.question)}
+                  className="flex-shrink-0 w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-sm hover:bg-white/25 active:scale-90 transition-all"
+                  title="Озвучить">🔊</button>
+                <button onClick={handleMic}
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm hover:bg-white/25 active:scale-90 transition-all ${isListening ? "bg-red-500/60 animate-pulse" : "bg-white/15"}`}
+                  title="Сказать ответ">🎤</button>
               </div>
             </div>
 
@@ -179,7 +228,7 @@ export function TaskModal({ tasks, currentIndex, source, correctCount, wrongCoun
                     <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 bg-gradient-to-br ${OPTION_COLORS[i]}`}>
                       {OPTION_LABELS[i]}
                     </span>
-                    <span className="text-white text-sm font-semibold leading-snug flex-1">{option}</span>
+                    <span className="text-white text-[15px] font-semibold leading-snug flex-1">{option}</span>
                     {showResult && isCorrect && <span className="text-lg">✅</span>}
                     {showResult && isSelected && !isCorrect && <span className="text-lg">❌</span>}
                   </button>

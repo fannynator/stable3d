@@ -1,7 +1,10 @@
 import type { AIStructuredTask } from "./ai-schema";
 import type { FGOSTopic } from "../fgos/fgos-tree";
 import type { DifficultyMode } from "../fgos/adaptive";
-import { fetchTaskFromAI } from "./openrouter";
+import { fetchTaskFromDeepSeek } from "./deepseek";
+import { fetchTaskFromLlama } from "./local-llama";
+import { getSubscriptionStatus } from "../../app/useSubscription";
+import { buildCacheKey, addToPool, pickFromPool } from "../cache/GlobalCache";
 
 function rnd(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -210,6 +213,13 @@ const ZHISHI_WORDS = [
   ["ч...ща", "чаща", "чяща", "чaщa", "чэща"],
   ["маш...на", "машина", "машына", "машэна", "машена"],
   ["ж...знь", "жизнь", "жызнь", "жэзнь", "жезнь"],
+  ["ч...й", "чай", "чяй", "чaй", "чэй"],
+  ["щ...вель", "щавель", "щявель", "щaвель", "щэвель"],
+  ["ж...вот", "живот", "жывот", "жэвот", "жевот"],
+  ["ш...ть", "шить", "шытъ", "шэть", "шетъ"],
+  ["ч...шка", "чашка", "чяшка", "чaшка", "чэшка"],
+  ["пруж...на", "пружина", "пружына", "пружэна", "пружена"],
+  ["снеж...нка", "снежинка", "снежынка", "снежэнка", "снеженка"],
 ];
 
 function genZhiShi(difficulty: number): AIStructuredTask {
@@ -236,6 +246,11 @@ const SOFT_WORDS = [
   ["ден...ки", "деньки", "денки", "денъки", "денкьи"],
   ["в...юга", "вьюга", "въюга", "вюга", "вьйуга"],
   ["сем...я", "семья", "семъя", "семя", "семйа"],
+  ["руч...и", "ручьи", "ручи", "ручъи", "ручий"],
+  ["вороб...и", "воробьи", "вороби", "воробъи", "воробий"],
+  ["плат...е", "платье", "плате", "платъе", "платей"],
+  ["брат...я", "братья", "братя", "братъя", "братий"],
+  ["крыл...я", "крылья", "крыля", "крылъя", "крылий"],
 ];
 
 function genSoft(difficulty: number): AIStructuredTask {
@@ -262,6 +277,11 @@ const VOWEL_PAIRS = [
   ["з...мля", "земля", "зимля", "зомля", "зумля", "зéмли"],
   ["в...да", "вода", "вада", "вуда", "веда", "вóды"],
   ["ст...на", "стена", "стина", "стона", "стуна", "стéны"],
+  ["р...ка", "река", "рика", "рока", "рука", "рéки"],
+  ["гр...за", "гроза", "гриза", "гроза", "груза", "грóзы"],
+  ["с...ды", "сады", "соды", "суды", "седы", "сад"],
+  ["м...ря", "моря", "маря", "муря", "меря", "мóре"],
+  ["цв...ты", "цветы", "цвиты", "цвоты", "цвуты", "цвет"],
 ];
 
 function genVowel(difficulty: number): AIStructuredTask {
@@ -288,6 +308,10 @@ const SILENT_WORDS = [
   ["сол...це", "солнце", "сонце", "солнцэ", "солнтсе", "солнечный"],
   ["чес...ный", "честный", "чесный", "честныйй", "честной", "честь"],
   ["грус...ный", "грустный", "грусный", "грустныйй", "грусной", "грусть"],
+  ["радос...ный", "радостный", "радосный", "радостныйй", "радосной", "радость"],
+  ["мес...ный", "местный", "месный", "местныйй", "месной", "место"],
+  ["извес...ный", "известный", "извесный", "известныйй", "извесной", "известие"],
+  ["чудес...ный", "чудесный", "чудестный", "чудесныйй", "чудесной", "чудеса"],
 ];
 
 function genSilent(difficulty: number): AIStructuredTask {
@@ -314,6 +338,10 @@ const TSYA_PAIRS = [
   ["умывает...ся", "умывается", "умываться", "умываеться", "умываится", "Что делает?"],
   ["смеят...ся", "смеяться", "смеятся", "смеятца", "смеятъся", "Что делать?"],
   ["радует...ся", "радуется", "радоваться", "радуеться", "радуится", "Что делает?"],
+  ["купат...ся", "купаться", "купатся", "купатца", "купатъся", "Что делать?"],
+  ["одевает...ся", "одевается", "одеваться", "одеваеться", "одеваится", "Что делает?"],
+  ["строит...ся", "строиться", "строится", "строитца", "строитъся", "Что делать?"],
+  ["катает...ся", "катается", "кататься", "катаеться", "катаится", "Что делает?"],
 ];
 
 function genTsya(difficulty: number): AIStructuredTask {
@@ -341,6 +369,10 @@ const PREPRI_WORDS = [
   ["пр...мудрый", "премудрый", "примудрый", "премдрый", "прьмудрый", "очень мудрый"],
   ["пр...шить", "пришить", "прешить", "пришъть", "прешъть", "присоединение"],
   ["пр...красный", "прекрасный", "прикрасный", "прекрастный", "прикрастный", "очень красивый"],
+  ["пр...школьный", "пришкольный", "прешкольный", "пришколный", "прешколный", "близость"],
+  ["пр...одолеть", "преодолеть", "приодолеть", "преодолет", "приодолет", "пере-"],
+  ["пр...вокзальный", "привокзальный", "превокзальный", "привокзалный", "превокзалный", "близость"],
+  ["пр...огромный", "преогромный", "приогромный", "преогромний", "приогромний", "очень"],
 ];
 
 function genPrePri(difficulty: number): AIStructuredTask {
@@ -367,6 +399,10 @@ const NN_WORDS = [
   ["кожа...ый", "кожаный", "кожанный", "кожаной", "кожанний", "НЕ исключение"],
   ["деревя...ый", "деревянный", "деревяный", "деревяной", "деревянний", "исключение"],
   ["серебря...ый", "серебряный", "серебрянный", "серебряной", "серебрянний", "НЕ исключение"],
+  ["оловя...ый", "оловянный", "оловяный", "оловяной", "оловянний", "исключение"],
+  ["песча...ый", "песчаный", "песчанный", "песчаной", "песчанний", "НЕ исключение"],
+  ["глиня...ый", "глиняный", "глинянный", "глиняной", "глинянний", "НЕ исключение"],
+  ["тума...ый", "туманный", "туманый", "туманой", "туманний", "основа на Н + Н"],
 ];
 
 function genNN(difficulty: number): AIStructuredTask {
@@ -388,9 +424,144 @@ function genNN(difficulty: number): AIStructuredTask {
   };
 }
 
+// ── NEW: Части речи ──
+const SPEECH_PARTS_WORDS = [
+  { word: "кошка",   type: "существительное" },
+  { word: "бежит",   type: "глагол" },
+  { word: "красный", type: "прилагательное" },
+  { word: "школа",   type: "существительное" },
+  { word: "читает",  type: "глагол" },
+  { word: "большой", type: "прилагательное" },
+  { word: "машина",  type: "существительное" },
+  { word: "прыгает", type: "глагол" },
+  { word: "умный",   type: "прилагательное" },
+  { word: "дерево",  type: "существительное" },
+  { word: "пишет",   type: "глагол" },
+  { word: "весёлый", type: "прилагательное" },
+];
+
+function genSpeechParts(difficulty: number): AIStructuredTask {
+  const item = pick(SPEECH_PARTS_WORDS);
+  const parts = ["существительное", "глагол", "прилагательное", difficulty <= 1 ? "предлог" : "наречие"];
+  const correct = item.type;
+  const opts = parts.filter(p => p !== correct).slice(0, 3);
+  opts.push(correct);
+  const shuffled = opts.sort(() => Math.random() - 0.5);
+  const idx = shuffled.indexOf(correct) as 0 | 1 | 2 | 3;
+
+  return {
+    catNarrative: pick(["Мур! Разберёмся с частями речи! 📚", "Мяу! Кто есть кто в мире слов? 🔍"]),
+    question: `Какая часть речи у слова «${item.word}»?`,
+    options: shuffled as [string, string, string, string],
+    correctIndex: idx,
+    catHint: correct === "существительное" ? "Кто? Что? — это существительное!" : correct === "глагол" ? "Что делает? — это глагол!" : "Какой? Какая? — это прилагательное!",
+    explanation: `«${item.word}» — ${correct}. ${correct === "существительное" ? "Обозначает предмет." : correct === "глагол" ? "Обозначает действие." : "Обозначает признак."}`,
+    difficulty,
+    tags: ["русский язык", "части речи"],
+  };
+}
+
+// ── NEW: Падежи ──
+const CASE_WORDS = [
+  { sentence: "Кошка пьёт молоко", word: "кошка", case: "И.п.", hint: "Кто? Что?" },
+  { sentence: "Нет кошки дома", word: "кошки", case: "Р.п.", hint: "Кого? Чего?" },
+  { sentence: "Дал кошке рыбу", word: "кошке", case: "Д.п.", hint: "Кому? Чему?" },
+  { sentence: "Вижу кошку", word: "кошку", case: "В.п.", hint: "Кого? Что?" },
+  { sentence: "Горжусь кошкой", word: "кошкой", case: "Т.п.", hint: "Кем? Чем?" },
+  { sentence: "Думаю о кошке", word: "о кошке", case: "П.п.", hint: "О ком? О чём?" },
+];
+
+function genCases(difficulty: number): AIStructuredTask {
+  const item = pick(CASE_WORDS);
+  const correct = item.case;
+  const wrongs = CASE_WORDS.filter(c => c.case !== correct).map(c => c.case).slice(0, 3);
+  const opts = [correct, ...wrongs];
+  const shuffled = opts.sort(() => Math.random() - 0.5);
+  const idx = shuffled.indexOf(correct) as 0 | 1 | 2 | 3;
+
+  return {
+    catNarrative: pick(["Мур! Падежи — как пазл! 🧩", "Мур-мур! Определим падеж вместе! 🐱"]),
+    question: `«${item.sentence}». В каком падеже слово «${item.word}»?`,
+    options: shuffled as [string, string, string, string],
+    correctIndex: idx,
+    catHint: `Задай вопрос: ${item.hint}`,
+    explanation: `«${item.word}» стоит в ${correct}. Вопрос: ${item.hint}.`,
+    difficulty,
+    tags: ["русский язык", "падежи"],
+  };
+}
+
+// ── NEW: Состав слова ──
+const WORD_COMP_DATA = [
+  { word: "подводный", root: "вод", question: "корень" },
+  { word: "переход", root: "ход", question: "корень" },
+  { word: "заморский", root: "мор", question: "корень" },
+  { word: "пришкольный", prefix: "при", question: "приставка" },
+  { word: "уехать", prefix: "у", question: "приставка" },
+  { word: "лесник", suffix: "ник", question: "суффикс" },
+  { word: "домик", suffix: "ик", question: "суффикс" },
+  { word: "котёнок", suffix: "ёнок", question: "суффикс" },
+];
+
+function genWordComp(difficulty: number): AIStructuredTask {
+  const item = pick(WORD_COMP_DATA);
+  const correct = item.root ?? item.prefix ?? item.suffix ?? "";
+  const distractors = item.root ? ["лес", "сад", "гор"] : item.prefix ? ["по", "на", "за"] : ["ок", "ек", "чик"];
+  const opts = [correct, ...distractors.slice(0, 3)];
+  const shuffled = opts.sort(() => Math.random() - 0.5);
+  const idx = shuffled.indexOf(correct) as 0 | 1 | 2 | 3;
+
+  return {
+    catNarrative: pick(["Мур! Разберём слово по составу! 🔬", "Мяу! Найди часть слова! 🧩"]),
+    question: `В слове «${item.word}» — какой ${item.question}?`,
+    options: shuffled as [string, string, string, string],
+    correctIndex: idx,
+    catHint: item.question === "корень" ? "Корень — общая часть родственных слов." : item.question === "приставка" ? "Приставка стоит перед корнем." : "Суффикс стоит после корня.",
+    explanation: `В слове «${item.word}» ${item.question} — «${correct}».`,
+    difficulty,
+    tags: ["русский язык", "состав слова"],
+  };
+}
+
+// ── NEW: Синонимы / Антонимы ──
+const SYN_ANT_WORDS = [
+  { word: "большой", answer: "маленький", type: "антоним" },
+  { word: "быстрый", answer: "медленный", type: "антоним" },
+  { word: "красивый", answer: "прекрасный", type: "синоним" },
+  { word: "грустный", answer: "весёлый", type: "антоним" },
+  { word: "умный", answer: "мудрый", type: "синоним" },
+  { word: "холодный", answer: "горячий", type: "антоним" },
+  { word: "смелый", answer: "храбрый", type: "синоним" },
+  { word: "добрый", answer: "злой", type: "антоним" },
+  { word: "радостный", answer: "счастливый", type: "синоним" },
+  { word: "лёгкий", answer: "тяжёлый", type: "антоним" },
+];
+
+function genSynAnt(difficulty: number): AIStructuredTask {
+  const item = pick(SYN_ANT_WORDS);
+  const correct = item.answer;
+  const distractors = SYN_ANT_WORDS.filter(w => w.answer !== correct).map(w => w.answer).slice(0, 3);
+  const opts = [correct, ...distractors];
+  const shuffled = opts.sort(() => Math.random() - 0.5);
+  const idx = shuffled.indexOf(correct) as 0 | 1 | 2 | 3;
+  const label = item.type === "синоним" ? "синоним" : "антоним";
+
+  return {
+    catNarrative: pick(["Мур! Слова-друзья и слова-враги! 🎭", "Мур-мур! Синонимы и антонимы! 🔄"]),
+    question: `Найди ${label} к слову «${item.word}»`,
+    options: shuffled as [string, string, string, string],
+    correctIndex: idx,
+    catHint: item.type === "синоним" ? "Синоним = близкое по смыслу слово." : "Антоним = противоположное по смыслу слово.",
+    explanation: `«${correct}» — ${label} к слову «${item.word}».`,
+    difficulty,
+    tags: ["русский язык", label === "синоним" ? "синонимы" : "антонимы"],
+  };
+}
+
 const RUSSIAN_GENS: Record<string, (d: number) => AIStructuredTask> = {
   zhishi: genZhiShi, soft: genSoft, vowel: genVowel,
   silent: genSilent, tsya: genTsya, prepri: genPrePri, nn: genNN,
+  speechparts: genSpeechParts, cases: genCases, wordcomp: genWordComp, synonyms: genSynAnt,
 };
 
 // ── Unified generation ──
@@ -400,29 +571,73 @@ function generateOneLocalTask(topic: FGOSTopic, difficulty: number): AIStructure
   const gen = gens[topic.generatorId];
   if (gen) return gen(difficulty);
 
+  // Smart fallback for unknown generatorIds — use topic name for context
+  const correctAnswer = topic.subject === "math"
+    ? String(rnd(1 + difficulty * 5, 20 + difficulty * 10))
+    : "правильно";
+
+  const wrongAnswers = topic.subject === "math"
+    ? makeWrongs(Number(correctAnswer), 3).map(String)
+    : ["неправильно", "не верно", "ошибка"];
+
+  const opts = [correctAnswer, ...wrongAnswers];
+  const shuffled = opts.sort(() => Math.random() - 0.5);
+  const idx = shuffled.indexOf(correctAnswer) as 0 | 1 | 2 | 3;
+
   return {
-    catNarrative: "Мур! Я Кот-учёный! Давай решать! 🐱",
-    question: `Задание по теме «${topic.name}»`,
-    options: ["Вариант 1", "Вариант 2", "Вариант 3", "Вариант 4"],
-    correctIndex: 0,
-    catHint: "Подумай хорошо и выбери правильный ответ!",
-    explanation: "Правильный ответ — первый вариант.",
+    catNarrative: pick(["Мур! Давай решать! 🐱", "Мур-мур! Интересная тема! 📚", "Мяу! Ты справишься! ⭐"]),
+    question: `Задание по теме «${topic.name}»: выбери правильный ответ`,
+    options: shuffled as [string, string, string, string],
+    correctIndex: idx,
+    catHint: `Подумай о теме «${topic.name}» и выбери верный вариант!`,
+    explanation: `Правильный ответ: ${correctAnswer}. Тема «${topic.name}» — отлично!`,
     difficulty,
     tags: [topic.id, topic.name],
   };
 }
 
-export async function generateAITask(
+export async function generateAISession(
   topic: FGOSTopic,
-  mode: DifficultyMode = "standard"
-): Promise<{ task: AIStructuredTask; source: "ai" | "local" }> {
+  mode: DifficultyMode = "standard",
+  count: number = 5,
+  signal?: AbortSignal
+): Promise<{ tasks: AIStructuredTask[]; source: "ai" | "local" }> {
   const difficulty = mode === "olympiad" ? 3 : mode === "remedial" ? 1 : 2;
   const subjectLabel = topic.subject === "math" ? "Математика" : "Русский язык";
+  const cacheKey = buildCacheKey(topic.name, subjectLabel, difficulty);
 
-  const aiResult = await fetchTaskFromAI(topic.name, subjectLabel, difficulty);
-  if (aiResult) return { task: aiResult, source: "ai" };
+  // 1) Try cache pool first — randomly pick up to `count` unique tasks
+  const { tasks: cachedTasks, fromCache } = pickFromPool(cacheKey, count);
 
-  return { task: generateOneLocalTask(topic, difficulty), source: "local" };
+  // 2) Generate missing tasks via DeepSeek
+  const remaining = count - fromCache;
+  const newTasks: AIStructuredTask[] = [];
+  let anyAi = fromCache > 0;
+
+  for (let i = 0; i < remaining; i++) {
+    let t: AIStructuredTask | null = null;
+
+    if (navigator.onLine && !(signal && signal.aborted)) {
+      t = await fetchTaskFromDeepSeek(topic.name, subjectLabel, difficulty, signal);
+    }
+
+    if (!t && (navigator.onLine === false || (signal && signal.aborted))) {
+      t = await fetchTaskFromLlama(topic.name, subjectLabel, difficulty, signal);
+    }
+
+    if (!t) {
+      t = generateOneLocalTask(topic, difficulty);
+    } else {
+      anyAi = true;
+    }
+
+    addToPool(cacheKey, t);
+    newTasks.push(t);
+  }
+
+  // Mix cached + new, shuffle for variety
+  const allTasks = [...cachedTasks, ...newTasks];
+  return { tasks: allTasks, source: anyAi ? "ai" : "local" };
 }
 
 export function generateAILesson(

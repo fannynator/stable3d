@@ -2,10 +2,10 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import type { CatState } from "../../types";
 import { CatRoomScene } from "../../../engine/three/cat-room";
 import { InteractiveZone, ZONES } from "./InteractiveZone";
-import { RoomBackground } from "./RoomBackground";
 import { PetCollection } from "./PetCollection";
 import { HatShop } from "./HatShop";
 import { PET_DEFS, HATS } from "../../config";
+import { catListen, catSpeak, catStop } from "../../voice";
 
 interface CatRoomProps {
   cat: CatState;
@@ -33,6 +33,7 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
   const [showPets, setShowPets] = useState(false);
   const [showHatShop, setShowHatShop] = useState(false);
   const [petHearts, setPetHearts] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [isListening, setIsListening] = useState(false);
   const speechTimer = useRef<ReturnType<typeof setTimeout>>();
   const heartId = useRef(0);
   const ownedPets = PET_DEFS.filter(p => ownedPetIds.includes(p.id));
@@ -97,6 +98,23 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
     }
   }, [cat.hunger, cat.energy, cat.mood, onPet, onUpdateCat, showSpeech]);
 
+  const handleMic = useCallback(async () => {
+    catStop();
+    setIsListening(true);
+    try {
+      const text = await catListen();
+      if (text) {
+        // Echo what the child said — cat repeats via Kokoro
+        await catSpeak(`Мур! Ты сказал: «${text}». Мяу!`);
+        showSpeech(text, 4000);
+      }
+    } catch {
+      // Silently fail — child can try again
+    } finally {
+      setIsListening(false);
+    }
+  }, [showSpeech]);
+
   useEffect(() => {
     const id = setTimeout(() => setAllHintsOff(true), 8000);
     return () => clearTimeout(id);
@@ -117,9 +135,11 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
   }, [cat.mood, showSpeech]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      <RoomBackground />
-
+    <div className="absolute inset-0 overflow-hidden" style={{
+      backgroundImage: "url(/room_bg.jpg)",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+    }}>
       {ZONES.map((zone) => (
         <InteractiveZone
           key={zone.name}
@@ -196,6 +216,10 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
       )}
 
       <div className="fixed top-3 right-3 flex gap-2 z-50">
+        <button onClick={handleMic}
+          className={`px-3 py-1.5 rounded-2xl text-white text-[13px] flex items-center gap-1 active:scale-95 transition-all ${isListening ? "bg-red-500/80 animate-pulse" : "bg-black/40 backdrop-blur-md"}`}>
+          🎤
+        </button>
         <button onClick={() => setShowHatShop(true)}
           className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-2xl text-white text-[13px] flex items-center gap-1 active:scale-95 transition-transform">
           🎩
@@ -222,6 +246,20 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
               +{ownedPets.length - 5}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Listening indicator */}
+      {isListening && (
+        <div className="absolute inset-0 z-[80] flex items-center justify-center pointer-events-none"
+          style={{ background: "rgba(0,0,0,0.15)" }}>
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-20 h-20 rounded-full bg-red-500/30 flex items-center justify-center animate-pulse"
+              style={{ border: "3px solid rgba(239,68,68,0.6)" }}>
+              <span className="text-4xl">🎤</span>
+            </div>
+            <p className="text-white font-black text-sm drop-shadow-lg">Кот слушает...</p>
+          </div>
         </div>
       )}
     </div>

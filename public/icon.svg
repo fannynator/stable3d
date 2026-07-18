@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)"/>
+  <!-- Cat body -->
+  <ellipse cx="256" cy="340" rx="120" ry="130" fill="#F5F3FF"/>
+  <!-- Cat head -->
+  <circle cx="256" cy="200" r="90" fill="#F5F3FF"/>
+  <!-- Ears -->
+  <polygon points="186,130 170,70 216,120" fill="#F5F3FF"/>
+  <polygon points="326,130 342,70 296,120" fill="#F5F3FF"/>
+  <!-- Inner ears -->
+  <polygon points="190,125 180,85 213,118" fill="#EDE9FE"/>
+  <polygon points="322,125 332,85 299,118" fill="#EDE9FE"/>
+  <!-- Eyes -->
+  <ellipse cx="222" cy="195" rx="18" ry="22" fill="#1E1B4B"/>
+  <ellipse cx="290" cy="195" rx="18" ry="22" fill="#1E1B4B"/>
+  <!-- Pupils -->
+  <ellipse cx="226" cy="190" rx="8" ry="10" fill="white"/>
+  <ellipse cx="294" cy="190" rx="8" ry="10" fill="white"/>
+  <!-- Nose -->
+  <ellipse cx="256" cy="220" rx="10" ry="7" fill="#F59E0B"/>
+  <!-- Mouth -->
+  <path d="M246,227 Q256,240 266,227" fill="none" stroke="#1E1B4B" stroke-width="4" stroke-linecap="round"/>
+  <!-- Whiskers -->
+  <line x1="140" y1="210" x2="200" y2="218" stroke="#C4B5FD" stroke-width="3" stroke-linecap="round"/>
+  <line x1="140" y1="225" x2="200" y2="225" stroke="#C4B5FD" stroke-width="3" stroke-linecap="round"/>
+  <line x1="372" y1="210" x2="312" y2="218" stroke="#C4B5FD" stroke-width="3" stroke-linecap="round"/>
+  <line x1="372" y1="225" x2="312" y2="225" stroke="#C4B5FD" stroke-width="3" stroke-linecap="round"/>
+  <!-- Graduation cap -->
+  <polygon points="180,115 256,65 332,115 256,145" fill="#1E1B4B"/>
+  <rect x="180" y="112" width="152" height="6" rx="2" fill="#1E1B4B"/>
+  <!-- Tassel -->
+  <line x1="332" y1="115" x2="355" y2="100" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="355" cy="100" r="8" fill="#F59E0B"/>
+  <!-- Book/paws -->
+  <ellipse cx="190" cy="380" rx="30" ry="18" fill="#EDE9FE"/>
+  <ellipse cx="322" cy="380" rx="30" ry="18" fill="#EDE9FE"/>
+</svg>

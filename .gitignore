@@ -3,3 +3,20 @@ dist/
 *.local
 .DS_Store
 *.log
+.env
+.env.local
+# Android build outputs
+android/app/build/
+android/.gradle/
+android/build/
+android/captures/
+android/local.properties
+# Gradle
+*.iml
+.gradle/
+# IDE
+.idea/
+*.iws
+*.ipr
+# OS
+Thumbs.db

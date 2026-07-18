@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { Tab, Skill, Trap } from "./types";
 import type { Subject } from "./types";
 import { useGameState } from "./state";
@@ -18,17 +18,22 @@ import { SpeedGame } from "./components/games/SpeedGame";
 import { MemoryGame } from "./components/games/MemoryGame";
 import { FlappyCat } from "./components/games/FlappyCat";
 import { DoodleCat } from "./components/games/DoodleCat";
+import { FGOSDoodleGame } from "./components/games/FGOSDoodleGame";
 import { HillClimbCat } from "./components/games/HillClimbCat";
 import { generateMathLesson } from "../generators/math";
 import { generateRusLesson } from "../generators/russian";
 import { TaskModal } from "./components/TaskModal";
+import { PrivacyModal, hasAcceptedPrivacy } from "./components/PrivacyModal";
+import { ParentPanel, recordTaskSolved, recordPlayTime, isTimeExceeded, getDailyTimeLimitMs } from "./components/ParentPanel";
+import { PaywallModal } from "./components/PaywallModal";
+import { getSubscriptionStatus, startTrial } from "./useSubscription";
 
 // FGOS integration
 import { MATH_CURRICULUM } from "../core/fgos/math-grades";
 import { RUSSIAN_CURRICULUM } from "../core/fgos/russian-grades";
 import { flattenTopics } from "../core/fgos/progression";
 import { calculateLessonReward } from "../core/economy/gems";
-import { generateAITask } from "../core/tasks/ai-adapter";
+import { generateAISession } from "../core/tasks/ai-adapter";
 import type { FGOSTopic } from "../core/fgos/fgos-tree";
 import type { AIStructuredTask } from "../core/tasks/ai-schema";
 import type { DifficultyMode } from "../core/fgos/adaptive";
@@ -157,6 +162,16 @@ export default function App() {
   const [defusingTrap, setDefusingTrap] = useState<Trap | null>(null);
   const [showFunGames, setShowFunGames] = useState(false);
   const [activeGame, setActiveGame] = useState<string | null>(null);
+  const [privacyAccepted, setPrivacyAccepted] = useState(hasAcceptedPrivacy);
+  const [parentOpen, setParentOpen] = useState(false);
+  const [timeExceeded, setTimeExceeded] = useState(false);
+  const [roomReady, setRoomReady] = useState(false);
+  const [subStatus] = useState(getSubscriptionStatus);
+  const [showPaywall, setShowPaywall] = useState(() => {
+    // Don't show paywall during privacy consent or if already subscribed
+    const s = getSubscriptionStatus();
+    return s !== "trial" && s !== "active";
+  });
 
   // Session state — 5-question mastery session
   const [session, setSession] = useState<{
@@ -168,6 +183,21 @@ export default function App() {
     wrong: number;
   } | null>(null);
   const [taskLoading, setTaskLoading] = useState(false);
+
+  // Delay catroom Canvas mount by 300ms to let GPU free avatar's context first
+  useEffect(() => {
+    if (tab === "catroom") {
+      setRoomReady(false);
+      const timer = setTimeout(() => setRoomReady(true), 300);
+      return () => clearTimeout(timer);
+    }
+    setRoomReady(false);
+  }, [tab]);
+
+  // AbortController for in-flight AI requests
+  const abortRef = useRef<AbortController | null>(null);
+  // Guard against double-click on session answers
+  const answerLockRef = useRef(false);
 
   // FGOS stars — topicId → star count (1-3), topic completed at 3
   const [fgosStars, setFgosStars] = useState<Record<string, number>>(loadStars);
@@ -227,17 +257,18 @@ export default function App() {
     const difficulty = starToDifficulty(currentStars);
 
     setTaskLoading(true);
+    // Cancel any previous in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    answerLockRef.current = false;
+
     try {
-      // Generate 5 unique tasks
-      const tasks: AIStructuredTask[] = [];
-      for (let i = 0; i < 5; i++) {
-        const { task } = await generateAITask(fgosTopic, mode);
-        tasks.push({ ...task, difficulty });
-      }
+      const { tasks, source } = await generateAISession(fgosTopic, mode, 5, controller.signal);
       setSession({
-        tasks,
+        tasks: tasks.map(t => ({ ...t, difficulty })),
         currentIndex: 0,
-        source: "local",
+        source,
         topicId: fgosTopic.id,
         correct: 0,
         wrong: 0,
@@ -252,7 +283,7 @@ export default function App() {
 
   // Handle one answer in the session
   const handleSessionAnswer = useCallback((isCorrect: boolean) => {
-    if (!session) return;
+    if (!session || answerLockRef.current) return;
     const nextIndex = session.currentIndex + 1;
     const nextCorrect = session.correct + (isCorrect ? 1 : 0);
     const nextWrong = session.wrong + (isCorrect ? 0 : 1);
@@ -261,6 +292,8 @@ export default function App() {
     if (isCorrect) {
       addGems(calculateLessonReward(1, 1));
     }
+
+    recordTaskSolved(state.subject, isCorrect);
 
     // If session is not over, advance to next task
     if (nextIndex < session.tasks.length) {
@@ -272,6 +305,9 @@ export default function App() {
       });
       return;
     }
+
+    // Lock to prevent double processing of final answer
+    answerLockRef.current = true;
 
     // Session complete — award star if 4/5 or better
     const passed = nextCorrect >= 4;
@@ -300,6 +336,7 @@ export default function App() {
 
   const handleSessionClose = useCallback(() => {
     setSession(null);
+    answerLockRef.current = false;
   }, []);
 
   const handleLessonFinish = useCallback((correct: number, wrong: number) => {
@@ -355,10 +392,12 @@ export default function App() {
   }, []);
 
   const goMain = useCallback(() => {
+    abortRef.current?.abort();
     setScreen("main");
     setActiveSkill(null);
     setActiveStoryId(null);
     setActiveGame(null);
+    setTaskLoading(false);
   }, []);
 
   const dailyStreakUpdate = useCallback(() => {
@@ -369,12 +408,40 @@ export default function App() {
     localStorage.setItem("kot_ucheniy_last_visit", today);
   }, []);
 
-  useEffect(() => { dailyStreakUpdate(); }, []);
+  useEffect(() => {
+    dailyStreakUpdate();
+    // Preload Kokoro TTS model in background (non-blocking)
+    import("./voice/engines/engine-kokoro").then(m => m.preload()).catch(() => {});
+    return () => abortRef.current?.abort();
+  }, []);
+
+  // Track play time every 10s + check limit
+  useEffect(() => {
+    const limit = getDailyTimeLimitMs();
+    if (limit <= 0) return;
+    // Check immediately on mount (user may have already exceeded today)
+    if (isTimeExceeded()) { setTimeExceeded(true); return; }
+    const interval = setInterval(() => {
+      recordPlayTime(10000);
+      if (isTimeExceeded()) setTimeExceeded(true);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const lessonTasks = useMemo(() => {
     if (!activeSkill) return [];
     return generateLesson(activeSkill.id);
   }, [activeSkill, generateLesson]);
+
+  // ── Privacy consent ──
+  if (!privacyAccepted) {
+    return <PrivacyModal onAccept={() => setPrivacyAccepted(true)} />;
+  }
+
+  // ── Paywall ──
+  if (showPaywall) {
+    return <PaywallModal onSubscribe={() => setShowPaywall(false)} onClose={() => {}} />;
+  }
 
   // ── Screen overlays ──
   if (screen === "lesson" && activeSkill) {
@@ -393,7 +460,7 @@ export default function App() {
     return (<div className="min-h-screen max-w-md mx-auto flex flex-col" style={{ background: "#1a0a3e" }}><FlappyCat onBack={goMain} /></div>);
   }
   if (screen === "doodle") {
-    return (<div className="min-h-screen max-w-md mx-auto flex flex-col" style={{ background: "#0a1628" }}><DoodleCat onBack={goMain} /></div>);
+    return (<div className="min-h-screen max-w-md mx-auto flex flex-col" style={{ background: "#0a1628" }}><FGOSDoodleGame subject={state.subject} onBack={goMain} onReward={(gems) => addGems(gems)} /></div>);
   }
   if (screen === "hillclimb") {
     return (<div className="min-h-screen max-w-md mx-auto flex flex-col" style={{ background: "#0a1628" }}><HillClimbCat onBack={goMain} /></div>);
@@ -404,7 +471,7 @@ export default function App() {
     <div className="min-h-screen flex items-start justify-center"
       style={{ background: "linear-gradient(160deg,#3B1F6B,#5B21B6,#7C3AED)" }}>
       <div className="relative w-full max-w-md min-h-screen flex flex-col overflow-hidden">
-        {/* Header — hidden on catroom tab for full-screen 3D */}
+        {/* Header — unmounted on catroom to free GPU for full-screen 3D */}
         {tab !== "catroom" && (
           <TopBar
             gems={state.gems}
@@ -416,6 +483,7 @@ export default function App() {
             phrase={subjectPhrase}
             subject={state.subject}
             onSubjectChange={switchSubject}
+            onParentAccess={() => setParentOpen(true)}
           />
         )}
 
@@ -433,7 +501,7 @@ export default function App() {
           <TrapPanel subject={state.subject} available={availableTraps} defused={defusedTraps} onDefuse={handleDefuseTrap} />
         )}
         {tab === "games" && (<GamesHub onGameClick={handleGameClick} />)}
-        {tab === "catroom" && (
+        {tab === "catroom" && roomReady && (
           <div className="flex-1 relative" style={{ background: "#1a1040" }}>
             <CatRoom
               cat={state.cat} totalPets={state.totalPets} ownedPetIds={state.pets}
@@ -488,6 +556,34 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Time Exceeded Overlay */}
+        {timeExceeded && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-6" style={{ background: "rgba(15,10,40,0.95)", backdropFilter: "blur(12px)" }}>
+            <div className="text-center max-w-xs">
+              <div className="text-7xl mb-4">⏰</div>
+              <h2 className="text-white font-black text-2xl mb-2">Время вышло!</h2>
+              <p className="text-purple-200 text-sm mb-1">Ты отлично позанимался сегодня!</p>
+              <p className="text-purple-300/50 text-xs mb-6">Лимит игрового времени на сегодня исчерпан. Приходи завтра!</p>
+              <div className="text-4xl mb-6">🐱💤</div>
+              <button onClick={() => setParentOpen(true)}
+                className="text-white/30 text-xs underline hover:text-white/60 transition-colors">
+                Я родитель — снять лимит
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Parent Panel */}
+        {parentOpen && (
+          <ParentPanel
+            totalStars={totalStars}
+            totalGems={state.gems}
+            currentSubject={state.subject}
+            onResetProgress={resetAllProgress}
+            onClose={() => setParentOpen(false)}
+          />
         )}
       </div>
     </div>

@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { GameState, Subject, Skill, Trap, Achievement, CatState, CatMood, ThemeId } from "./types";
 import {
   STORAGE_KEY, ROOM_STORAGE_KEY, SUBJECTS,
   ACHIEVEMENTS_DEF, MATH_SKILLS, RUS_SKILLS,
-  DEFAULT_THEME, DEFAULT_CAT,
+  DEFAULT_THEME, DEFAULT_UNLOCKED_THEMES, DEFAULT_CAT,
   THEMES, GEMS, TRAP, SKILL, PET_DEFS,
 } from "./config";
 import { deriveCatMood, decayCat } from "../core/player/cat";
@@ -15,8 +15,8 @@ function deepClone<T>(obj: T): T {
 function createDefaultState(): GameState {
   return {
     subject: SUBJECTS.MATH,
-    streak: 7,
-    gems: 245,
+    streak: 0,
+    gems: 0,
     totalPets: 0,
     storiesCompleted: { math: false, rus1: false, rus2: false },
     traps: [],
@@ -27,6 +27,7 @@ function createDefaultState(): GameState {
     },
     subjectSwitches: 0,
     theme: DEFAULT_THEME,
+    unlockedThemes: [...DEFAULT_UNLOCKED_THEMES],
     cat: { ...DEFAULT_CAT },
     pets: [],
   };
@@ -57,6 +58,7 @@ function loadState(): GameState {
     if (data.subject) defaultState.subject = data.subject;
     if (data.subjectSwitches !== undefined) defaultState.subjectSwitches = data.subjectSwitches;
     if (data.theme) defaultState.theme = data.theme;
+    if (data.unlockedThemes) defaultState.unlockedThemes = data.unlockedThemes;
     if (data.pets) defaultState.pets = data.pets;
 
     // Load cat state from room storage
@@ -97,6 +99,7 @@ function saveGameState(state: GameState) {
     subject: state.subject,
     subjectSwitches: state.subjectSwitches,
     theme: state.theme,
+    unlockedThemes: state.unlockedThemes,
     pets: state.pets,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -119,9 +122,12 @@ function saveCatState(cat: CatState) {
 export function useGameState() {
   const [state, setState] = useState<GameState>(loadState);
 
-  // Persist on change
+  // Persist on change (debounced to avoid blocking main thread)
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
-    saveGameState(state);
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => saveGameState(state), 500);
+    return () => clearTimeout(saveTimer.current);
   }, [state]);
 
   // Decay cat stats every minute
@@ -159,17 +165,18 @@ export function useGameState() {
   }, [state.traps, state.subject]);
 
   const unlockAchievement = useCallback((id: string) => {
-    let unlocked = false;
+    let didUnlock = false;
     setState(prev => {
       const ach = prev.achievements[id];
       if (!ach || ach.unlocked) return prev;
+      didUnlock = true;
       return {
         ...prev,
         achievements: { ...prev.achievements, [id]: { ...ach, unlocked: true } },
         gems: prev.gems + GEMS.ACHIEVEMENT_REWARD,
       };
     });
-    return unlocked;
+    return didUnlock;
   }, []);
 
   const checkAchievements = useCallback(() => {
@@ -243,26 +250,27 @@ export function useGameState() {
         }
       }
       skills[idx] = skill;
+
+      // Compute total completed lessons from prev (fixes stale closure)
+      const otherSubject = prev.subject === "math" ? "russian" : "math";
+      const allSkills = [...skills, ...prev.skills[otherSubject]];
+      const totalDone = allSkills.filter(s => s.progress >= SKILL.PROGRESS_TO_COMPLETE).length;
+
+      // Check theme unlocks without mutating config
+      let unlockedThemes = prev.unlockedThemes;
+      Object.values(THEMES).forEach(t => {
+        if (t.unlockAt != null && totalDone >= t.unlockAt && !unlockedThemes.includes(t.id)) {
+          unlockedThemes = [...unlockedThemes, t.id];
+        }
+      });
+
       return {
         ...prev,
         skills: { ...prev.skills, [prev.subject]: skills },
+        unlockedThemes,
       };
     });
-
-    // Check theme unlocks
-    setState(prev => {
-      const totalDone = countCompletedLessons();
-      const newThemes = { ...THEMES };
-      let changed = false;
-      Object.values(newThemes).forEach(t => {
-        if (!t.unlocked && t.unlockAt && totalDone >= t.unlockAt) {
-          t.unlocked = true;
-          changed = true;
-        }
-      });
-      return changed ? { ...prev } : prev;
-    });
-  }, [countCompletedLessons]);
+  }, []);
 
   const addTrap = useCallback((trap: Trap) => {
     setState(prev => {
@@ -324,7 +332,10 @@ export function useGameState() {
   const resetAllProgress = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(ROOM_STORAGE_KEY);
-    setState(createDefaultState());
+    const fresh = createDefaultState();
+    // Reset THEMES config too (in case it was mutated by old code)
+    Object.values(THEMES).forEach(t => { t.unlocked = DEFAULT_UNLOCKED_THEMES.includes(t.id); });
+    setState(fresh);
     applyThemeToDOM(DEFAULT_THEME);
   }, []);
 

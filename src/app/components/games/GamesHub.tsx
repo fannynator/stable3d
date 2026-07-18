@@ -11,13 +11,12 @@ interface GameItem {
 const EDUCATIONAL_GAMES: GameItem[] = [
   { id: "speed", emoji: "⚡", title: "Быстрый счёт", desc: "Реши примеры за время!", gradient: "linear-gradient(135deg,#60A5FA,#4F46E5)", shadow: "0 8px 20px rgba(96,165,250,0.4)", locked: false },
   { id: "memory", emoji: "🎴", title: "Карточки памяти", desc: "Найди все пары!", gradient: "linear-gradient(135deg,#FCD34D,#F97316)", shadow: "0 8px 20px rgba(252,211,77,0.45)", locked: false },
-  { id: "puzzle", emoji: "🧩", title: "Пазлы", desc: "Собери слово или пример", gradient: "linear-gradient(135deg,#A78BFA,#7C3AED)", shadow: "0 8px 20px rgba(167,139,250,0.4)", locked: true },
-  { id: "crossword", emoji: "📝", title: "Кроссворды", desc: "Разгадай кроссворд", gradient: "linear-gradient(135deg,#34D399,#059669)", shadow: "0 8px 20px rgba(52,211,153,0.4)", locked: true },
+  { id: "doodle", emoji: "🐱", title: "Кот-попрыгун", desc: "Прыгай на правильные ответы!", gradient: "linear-gradient(135deg,#34D399,#059669)", shadow: "0 8px 20px rgba(52,211,153,0.4)", locked: false },
 ];
 
 export const FUN_GAMES: GameItem[] = [
   { id: "flappy", emoji: "🐦", title: "Flappy Cat", desc: "Кот летит через трубы!", gradient: "linear-gradient(135deg,#60A5FA,#06B6D4)", shadow: "0 8px 20px rgba(96,165,250,0.4)", locked: false },
-  { id: "doodle", emoji: "🐸", title: "Doodle Cat", desc: "Кот прыгает по платформам!", gradient: "linear-gradient(135deg,#A78BFA,#7C3AED)", shadow: "0 8px 20px rgba(167,139,250,0.4)", locked: false },
+  { id: "doodle", emoji: "🐸", title: "Кот-попрыгун", desc: "Прыгай на правильные ответы!", gradient: "linear-gradient(135deg,#34D399,#059669)", shadow: "0 8px 20px rgba(52,211,153,0.4)", locked: false },
   { id: "hillclimb", emoji: "🏎️", title: "Hill Climb Cat", desc: "Кот покоряет холмы!", gradient: "linear-gradient(135deg,#F59E0B,#F97316)", shadow: "0 8px 20px rgba(245,158,11,0.4)", locked: false },
 ];
 

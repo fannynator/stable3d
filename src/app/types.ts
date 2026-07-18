@@ -98,6 +98,7 @@ export interface GameState {
   };
   subjectSwitches: number;
   theme: ThemeId;
+  unlockedThemes: ThemeId[];
   cat: CatState;
   pets: string[];
 }

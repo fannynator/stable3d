@@ -3,59 +3,51 @@ import type { Skill } from "../../types";
 interface SkillCardProps {
   skill: Skill;
   stars: number;
+  delay?: number;
   onClick?: () => void;
 }
 
-export function SkillCard({ skill, stars, onClick }: SkillCardProps) {
-  const pct = skill.progress;
-  const statusText =
-    pct >= 100
-      ? "✅ Пройдено"
-      : pct > 0
-      ? `${pct}% · ${stars}/3 ⭐`
-      : skill.status === "current"
-      ? "🚀 Доступно"
-      : "🔒 Закрыто";
+export function SkillCard({ skill, stars, delay = 0, onClick }: SkillCardProps) {
+  const locked = skill.status === "locked";
+  const mastered = skill.status === "completed";
 
   return (
     <div
-      onClick={skill.status !== "locked" ? onClick : undefined}
-      className={`relative rounded-3xl overflow-hidden cursor-pointer transition-all duration-200 active:scale-95 hover:scale-[1.04] ${skill.status === "locked" ? "opacity-55" : ""}`}
-      style={{ boxShadow: skill.shadow }}
+      onClick={!locked ? onClick : undefined}
+      className={`relative rounded-3xl overflow-hidden cursor-pointer transition-all duration-200 active:scale-95 hover:scale-[1.04] ${locked ? "opacity-55" : ""}`}
+      style={{
+        boxShadow: skill.shadow,
+        animation: `fadeSlideUp 0.45s ${delay}s ease-out both`,
+      }}
     >
-      <div className="p-4 flex flex-col items-center justify-between min-h-[150px] relative" style={{ background: skill.gradient }}>
-        <div className="absolute -top-3.5 -right-3.5 w-12 h-12 rounded-full bg-white/12" />
-        <div className="absolute -bottom-2.5 -left-2.5 w-8 h-8 rounded-full bg-white/10" />
+      <div className="p-4 flex flex-col items-center justify-between min-h-[140px] relative" style={{ background: skill.gradient }}>
+        {/* Decorative circles */}
+        <div style={{ position: "absolute", top: -14, right: -14, width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.12)" }} />
+        <div style={{ position: "absolute", bottom: -10, left: -10, width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
 
-        {skill.status === "locked" && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-[rgba(30,27,75,0.52)] backdrop-blur-sm">
-            <div className="text-5xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">🔒</div>
+        {/* Locked overlay */}
+        {locked && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-3xl" style={{ background: "rgba(30,27,75,0.52)", backdropFilter: "blur(2px)" }}>
+            <div className="text-5xl" style={{ filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4))" }}>🔒</div>
           </div>
         )}
 
-        {skill.status === "completed" && (
-          <div className="absolute top-2.5 right-2.5 text-xl drop-shadow-[0_2px_6px_rgba(0,0,0,0.25)]">🏆</div>
+        {/* Mastered trophy */}
+        {mastered && (
+          <div className="absolute top-2.5 right-2.5 text-xl" style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.25))" }}>🏆</div>
         )}
 
-        <div className="text-5xl mt-1 relative z-10 drop-shadow-[0_3px_8px_rgba(0,0,0,0.22)]">{skill.icon}</div>
-        <div className="text-white font-black text-center text-xs leading-tight relative z-10 mt-1">{skill.name}</div>
+        {/* Icon */}
+        <div className="text-5xl mt-1 relative z-10" style={{ filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.22))" }}>{skill.icon}</div>
 
-        {/* 3-star indicator */}
-        {skill.status !== "locked" && (
-          <div className="flex gap-1 my-1 relative z-10">
-            {[1, 2, 3].map(i => (
-              <span key={i} className={`text-sm transition-all duration-300 ${i <= stars ? "opacity-100 scale-110 drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]" : "opacity-25 scale-75"}`}>
-                ⭐
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Title */}
+        <div className="text-white font-black text-center text-sm drop-shadow leading-tight relative z-10">{skill.name}</div>
 
-        <div className="w-full mt-1 relative z-10">
-          <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: "rgba(255,255,255,0.85)" }} />
-          </div>
-          <div className="text-white/80 text-[10px] font-bold text-center mt-0.5">{statusText}</div>
+        {/* Stars */}
+        <div className="flex gap-0.5 relative z-10">
+          {[0, 1, 2].map(i => (
+            <span key={i} className={`text-base leading-none ${i < stars ? "text-yellow-300" : "text-white/30"}`}>★</span>
+          ))}
         </div>
       </div>
     </div>

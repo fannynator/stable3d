@@ -2,7 +2,7 @@ export function RoomBackground() {
   return (
     <svg
       viewBox="0 0 400 700"
-      className="absolute inset-0 w-full h-full"
+      className="absolute inset-0 w-full h-full opacity-80"
       preserveAspectRatio="xMidYMid slice"
       xmlns="http://www.w3.org/2000/svg"
     >

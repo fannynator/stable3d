@@ -32,7 +32,7 @@ export function TrapQuiz({ trap, catEmoji, onResolve, onClose }: TrapQuizProps) 
           <div className="text-xs text-gray-400 mt-1">«Ой, тут мы ошиблись! Давай разберёмся вместе…»</div>
         </div>
 
-        <div className="text-center font-semibold text-sm text-gray-700 mb-4 p-3 bg-purple-50 rounded-xl border border-purple-100 leading-relaxed">
+        <div className="text-center font-semibold text-[15px] text-gray-700 mb-4 p-3 bg-purple-50 rounded-xl border border-purple-100 leading-relaxed">
           {trap.question}
         </div>
 
@@ -80,7 +80,7 @@ function TrapChoiceQuiz({ trap, done, onSuccess, onFail }: { trap: Trap; done: b
         if (done && idx !== selected && idx === correct) bg = "bg-emerald-50 border-emerald-500";
         return (
           <button key={idx} disabled={done} onClick={() => handleClick(idx)}
-            className={`w-full py-3 px-4 rounded-xl font-semibold text-sm border-2 transition-all ${bg} ${done ? "pointer-events-none" : "hover:border-purple-300"}`}>
+            className={`w-full py-3 px-4 rounded-xl font-semibold text-[15px] border-2 transition-all ${bg} ${done ? "pointer-events-none" : "hover:border-purple-300"}`}>
             {done && idx === selected && idx === correct && "✅ "}
             {done && idx === selected && idx !== correct && "❌ "}
             {done && idx !== selected && idx === correct && "✅ "}

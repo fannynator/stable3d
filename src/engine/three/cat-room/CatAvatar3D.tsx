@@ -1,4 +1,4 @@
-import { Suspense, useState, useCallback, useRef, useEffect } from "react";
+import { Suspense, useCallback, useRef, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
@@ -10,9 +10,9 @@ const MODEL_PATH = "/cat_hub.glb";
 function AvatarCamera({ z }: { z: number }) {
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 3.0, z);
+    camera.position.set(0, 3.5, 6.0);
     camera.fov = 35;
-    camera.lookAt(0, 3.0, 0);
+    camera.lookAt(0, 3.5, 0);
     camera.updateProjectionMatrix();
   }, [camera, z]);
   return null;
@@ -76,6 +76,7 @@ function CatHead({ mood, lookTarget }: CatHeadProps) {
     }
 
     applyFriendlyExpression(group);
+    applyFurMaterial(group);
     return () => mixerRef.current?.stopAllAction();
   }, [scene, animations]);
 
@@ -113,6 +114,27 @@ function CatHead({ mood, lookTarget }: CatHeadProps) {
 const SMILE_NAMES = ["smile", "Smile", "Mouth_Smile", "mouthSmile", "happy", "Happy"];
 const FROWN_NAMES = ["frown", "Frown", "Mouth_Frown", "mouthFrown", "sad", "Sad", "browDown"];
 
+/** Make cat fur matte by adjusting roughness/metalness on all mesh materials */
+function applyFurMaterial(group: THREE.Group): void {
+  group.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    const mat = child.material;
+    if (Array.isArray(mat)) {
+      mat.forEach(m => {
+        if (m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshPhysicalMaterial) {
+          m.roughness = 0.75;
+          m.metalness = 0.0;
+          m.needsUpdate = true;
+        }
+      });
+    } else if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+      mat.roughness = 0.75;
+      mat.metalness = 0.0;
+      mat.needsUpdate = true;
+    }
+  });
+}
+
 function applyFriendlyExpression(group: THREE.Group): void {
   group.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return;
@@ -142,7 +164,7 @@ interface CatAvatar3DProps {
   camZ?: number;
 }
 
-export function CatAvatar3D({ mood, size = 70, camZ = 4.2 }: CatAvatar3DProps) {
+export function CatAvatar3D({ mood, size = 85, camZ = 5 }: CatAvatar3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const lookRef = useRef({ x: 0, y: 0 });
 
@@ -183,11 +205,14 @@ export function CatAvatar3D({ mood, size = 70, camZ = 4.2 }: CatAvatar3DProps) {
     >
       <Canvas
         style={{ width: "100%", height: "100%" }}
-        gl={{ alpha: true, antialias: true }}
+        dpr={[0.5, 1]}
+        gl={{ alpha: true, antialias: false, toneMappingExposure: 1.2 }}
       >
         <AvatarCamera z={camZ} />
         <ambientLight intensity={2.2} />
         <directionalLight position={[5, 10, 8]} intensity={1.8} />
+        {/* Rim light — back/side highlight for cinematic contour */}
+        <directionalLight position={[-4, 5, -3]} intensity={1.2} color="#a78bfa" />
         <Suspense fallback={null}>
           <CatHead mood={mood} lookTarget={lookRef} />
         </Suspense>

@@ -76,6 +76,7 @@ export const CAT_SPEECH = {
 export const SUBJECT_EMOJI: Record<Subject, string> = { math: "🐱", russian: "😺" };
 
 export const DEFAULT_THEME: ThemeId = "light";
+export const DEFAULT_UNLOCKED_THEMES: ThemeId[] = ["light", "dark"];
 
 export const THEMES: Record<ThemeId, Theme> = {
   light: {

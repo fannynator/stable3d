@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Иконки Кот Учёный</title><style>
+body{font-family:sans-serif;text-align:center;padding:40px;background:#1a1040;color:white}
+canvas{border-radius:24px;margin:10px;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+button{margin:8px;padding:12px 28px;border-radius:14px;border:none;background:#7C3AED;color:white;font:bold 16px sans-serif;cursor:pointer}
+button:hover{background:#5B21B6}a{color:#A78BFA}
+</style></head><body>
+<h1>🐱 Иконки для Кота Учёного</h1>
+<p>Нажми кнопки чтобы скачать PNG для RuStore</p>
+<div>
+<canvas id="c192" width="192" height="192"></canvas>
+<canvas id="c512" width="512" height="512"></canvas>
+</div>
+<button onclick="download('c192','icon-192.png')">📥 Скачать 192×192</button>
+<button onclick="download('c512','icon-512.png')">📥 Скачать 512×512</button>
+<p style="margin-top:20px;color:#A78BFA">Положи скачанные файлы в папку <code>public/</code></p>
+
+<script>
+function drawIcon(canvasId) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height, r = w * 0.23;
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0,0,w,h);
+  grad.addColorStop(0,'#7C3AED'); grad.addColorStop(1,'#4F46E5');
+  ctx.fillStyle = grad; ctx.beginPath(); ctx.roundRect(0,0,w,h,r); ctx.fill();
+
+  const cx = w/2, cy = h * 0.6, s = w / 3.5;
+  const hx = w/2, hy = h * 0.38;
+
+  ctx.fillStyle = '#F5F3FF';
+  // Body
+  ctx.beginPath(); ctx.ellipse(cx, cy + s*0.25, s*0.9, s, 0, 0, Math.PI*2); ctx.fill();
+  // Head
+  ctx.beginPath(); ctx.arc(hx, hy, s*0.7, 0, Math.PI*2); ctx.fill();
+
+  // Ears
+  ctx.beginPath(); ctx.moveTo(hx-s*0.5, hy-s*0.3); ctx.lineTo(hx-s*0.65, hy-s*0.9); ctx.lineTo(hx-s*0.15, hy-s*0.35); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(hx+s*0.5, hy-s*0.3); ctx.lineTo(hx+s*0.65, hy-s*0.9); ctx.lineTo(hx+s*0.15, hy-s*0.35); ctx.fill();
+
+  ctx.fillStyle = '#EDE9FE';
+  ctx.beginPath(); ctx.moveTo(hx-s*0.45, hy-s*0.28); ctx.lineTo(hx-s*0.57, hy-s*0.8); ctx.lineTo(hx-s*0.2, hy-s*0.32); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(hx+s*0.45, hy-s*0.28); ctx.lineTo(hx+s*0.57, hy-s*0.8); ctx.lineTo(hx+s*0.2, hy-s*0.32); ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#1E1B4B';
+  const es = s*0.14, ew = s*0.14;
+  ctx.beginPath(); ctx.ellipse(hx - s*0.22, hy - s*0.02, ew, es*0.9, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(hx + s*0.22, hy - s*0.02, ew, es*0.9, 0, 0, Math.PI*2); ctx.fill();
+
+  // Pupils
+  ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.arc(hx - s*0.19, hy - s*0.05, ew*0.4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(hx + s*0.25, hy - s*0.05, ew*0.4, 0, Math.PI*2); ctx.fill();
+
+  // Nose
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath(); ctx.ellipse(hx, hy + s*0.1, ew*0.5, ew*0.35, 0, 0, Math.PI*2); ctx.fill();
+
+  // Mouth
+  ctx.strokeStyle = '#1E1B4B'; ctx.lineWidth = w * 0.008; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx - s*0.08, hy + s*0.16); ctx.quadraticCurveTo(hx, hy + s*0.28, hx + s*0.08, hy + s*0.16); ctx.stroke();
+
+  // Whiskers
+  ctx.strokeStyle = '#C4B5FD'; ctx.lineWidth = w * 0.006;
+  ctx.beginPath(); ctx.moveTo(hx - s*0.75, hy + s*0.02); ctx.lineTo(hx - s*0.22, hy + s*0.06); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hx - s*0.75, hy + s*0.12); ctx.lineTo(hx - s*0.22, hy + s*0.12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hx + s*0.75, hy + s*0.02); ctx.lineTo(hx + s*0.22, hy + s*0.06); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hx + s*0.75, hy + s*0.12); ctx.lineTo(hx + s*0.22, hy + s*0.12); ctx.stroke();
+
+  // Graduation cap
+  ctx.fillStyle = '#1E1B4B';
+  ctx.beginPath(); ctx.moveTo(hx - s*0.5, hy - s*0.55); ctx.lineTo(hx, hy - s*0.8); ctx.lineTo(hx + s*0.5, hy - s*0.55); ctx.closePath(); ctx.fill();
+  ctx.fillRect(hx - s*0.5, hy - s*0.58, s, s*0.06);
+
+  // Tassel
+  ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = w * 0.007;
+  ctx.beginPath(); ctx.moveTo(hx + s*0.5, hy - s*0.55); ctx.lineTo(hx + s*0.65, hy - s*0.7); ctx.stroke();
+  ctx.fillStyle = '#F59E0B';
+  ctx.beginPath(); ctx.arc(hx + s*0.65, hy - s*0.7, s*0.07, 0, Math.PI*2); ctx.fill();
+
+  // Paws
+  ctx.fillStyle = '#EDE9FE';
+  ctx.beginPath(); ctx.ellipse(cx - s*0.45, cy + s*0.65, s*0.2, s*0.12, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + s*0.45, cy + s*0.65, s*0.2, s*0.12, 0, 0, Math.PI*2); ctx.fill();
+}
+
+function download(canvasId, filename) {
+  const c = document.getElementById(canvasId);
+  const a = document.createElement('a');
+  a.download = filename; a.href = c.toDataURL('image/png'); a.click();
+}
+
+drawIcon('c192'); drawIcon('c512');
+</script>
+</body></html>

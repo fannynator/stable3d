@@ -6,6 +6,9 @@ function getCtx(): AudioContext | null {
       audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     } catch { return null; }
   }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume().catch(() => {});
+  }
   return audioCtx;
 }
 
@@ -66,7 +69,7 @@ export function spawnConfetti() {
     p.style.cssText = `position:fixed;left:${Math.random() * 100}%;top:-${Math.random() * 100}px;color:${colors[Math.floor(Math.random() * colors.length)]};font-size:${Math.random() * 10 + 6}px;animation:confettiDrop ${Math.random() * 0.4 + 0.5}s ${Math.random() * 0.3}s ease-in forwards;`;
     c.appendChild(p);
   }
-  setTimeout(() => c.remove(), 1200);
+  setTimeout(() => { c.style.opacity = "0"; setTimeout(() => c.remove(), 600); }, 1200);
 }
 
 export function spawnLeaves() {
@@ -80,5 +83,5 @@ export function spawnLeaves() {
     l.style.cssText = `position:fixed;left:${Math.random() * 100}%;top:-${Math.random() * 50}px;font-size:${Math.random() * 16 + 10}px;animation:leafFall ${Math.random() * 1.5 + 2}s ${Math.random() * 0.8}s linear forwards;pointer-events:none;`;
     c.appendChild(l);
   }
-  setTimeout(() => c.remove(), 3500);
+  setTimeout(() => { c.style.opacity = "0"; setTimeout(() => c.remove(), 600); }, 3500);
 }
