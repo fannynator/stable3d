@@ -27,9 +27,6 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  optimizeDeps: {
-    exclude: ['kokoro-js'],
-  },
   build: {
     target: 'esnext',
   },
