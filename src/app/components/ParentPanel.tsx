@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { Subject } from "../../types";
 
 const PIN_KEY = "kot_ucheniy_parent_pin";
 const LIMIT_KEY = "kot_ucheniy_daily_limit";
 const STATS_KEY = "kot_ucheniy_stats";
+const STATS_HISTORY_KEY = "kot_ucheniy_stats_history";
 
 interface DailyStats {
   date: string;
   tasksSolved: number;
   correctAnswers: number;
   timeSpentMs: number;
-  starsEarned: number;
   mathTasks: number;
   rusTasks: number;
 }
@@ -39,7 +39,6 @@ function createEmptyStats(): DailyStats {
     tasksSolved: 0,
     correctAnswers: 0,
     timeSpentMs: 0,
-    starsEarned: 0,
     mathTasks: 0,
     rusTasks: 0,
   };
@@ -47,6 +46,23 @@ function createEmptyStats(): DailyStats {
 
 function saveStats(stats: DailyStats) {
   localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  // Save to history
+  const history = loadStatsHistory();
+  history[stats.date] = stats;
+  // Keep last 7 days
+  const keys = Object.keys(history).sort().slice(-7);
+  const trimmed: Record<string, DailyStats> = {};
+  for (const k of keys) trimmed[k] = history[k];
+  localStorage.setItem(STATS_HISTORY_KEY, JSON.stringify(trimmed));
+}
+
+function loadStatsHistory(): Record<string, DailyStats> {
+  try {
+    const raw = localStorage.getItem(STATS_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
 }
 
 export function recordTaskSolved(subject: Subject, correct: boolean) {
@@ -59,9 +75,7 @@ export function recordTaskSolved(subject: Subject, correct: boolean) {
 }
 
 export function recordStarEarned() {
-  const stats = loadStats();
-  stats.starsEarned++;
-  saveStats(stats);
+  // deprecated — no stars system anymore, progress tracked via tasks
 }
 
 export function recordPlayTime(ms: number) {
@@ -93,7 +107,8 @@ export function ParentPanel({ totalStars, totalGems, currentSubject, onResetProg
     return raw ? parseInt(raw) : 0;
   });
   const [stats] = useState(loadStats);
-  const [tab, setTab] = useState<"stats" | "limit" | "reset">("stats");
+  const [tab, setTab] = useState<"stats" | "week" | "limit" | "reset">("stats");
+  const weekHistory = useMemo(() => loadStatsHistory(), []);
 
   const savedPin = localStorage.getItem(PIN_KEY);
 
@@ -133,7 +148,7 @@ export function ParentPanel({ totalStars, totalGems, currentSubject, onResetProg
             <div className="text-center mb-4">
               <div className="text-4xl mb-2">🔐</div>
               <h2 className="font-black text-xl text-gray-800">Родительский раздел</h2>
-              <p className="text-gray-500 text-sm mt-1">Установите PIN-код для доступа</p>
+              <p className="text-gray-500 text-sm mt-1">Придумайте PIN-код (4 цифры). Без него не выйти.</p>
             </div>
             {!settingPin ? (
               <button onClick={() => setSettingPin(true)}
@@ -157,7 +172,9 @@ export function ParentPanel({ totalStars, totalGems, currentSubject, onResetProg
                 </button>
               </div>
             )}
-            <button onClick={onClose} className="w-full mt-3 py-3 rounded-2xl font-bold text-gray-400 text-sm">Закрыть</button>
+            {savedPin !== null && (
+              <button onClick={onClose} className="w-full mt-3 py-3 rounded-2xl font-bold text-gray-400 text-sm">Закрыть</button>
+            )}
           </div>
         </div>
       );
@@ -202,10 +219,10 @@ export function ParentPanel({ totalStars, totalGems, currentSubject, onResetProg
           </div>
           {/* Tabs */}
           <div className="flex gap-1 mt-3 bg-white/15 rounded-2xl p-1">
-            {(["stats", "limit", "reset"] as const).map(t => (
+            {(["stats", "week", "limit", "reset"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all ${tab === t ? "bg-white text-purple-700" : "text-white/70"}`}>
-                {t === "stats" ? "📈 Статистика" : t === "limit" ? "⏱️ Лимит" : "🔄 Сброс"}
+                {t === "stats" ? "📈 Сегодня" : t === "week" ? "📅 Неделя" : t === "limit" ? "⏱️ Лимит" : "🔄 Сброс"}
               </button>
             ))}
           </div>
@@ -219,8 +236,8 @@ export function ParentPanel({ totalStars, totalGems, currentSubject, onResetProg
               <div className="grid grid-cols-2 gap-3">
                 <StatBox emoji="✅" label="Решено задач" value={String(stats.tasksSolved)} />
                 <StatBox emoji="🎯" label="Правильно" value={`${accuracy}%`} sub={`${stats.correctAnswers}/${stats.tasksSolved}`} />
-                <StatBox emoji="⭐" label="Звёзд сегодня" value={String(stats.starsEarned)} />
                 <StatBox emoji="⏱️" label="Время игры" value={`${playMinutes} мин`} />
+                <StatBox emoji="📊" label="Точность" value={`${accuracy}%`} />
               </div>
               <div className="grid grid-cols-2 gap-3 mt-1">
                 <StatBox emoji="🧮" label="Математика" value={String(stats.mathTasks)} />
@@ -231,6 +248,34 @@ export function ParentPanel({ totalStars, totalGems, currentSubject, onResetProg
                 <StatBox emoji="⭐" label="Всего звёзд" value={String(totalStars)} />
                 <StatBox emoji="💎" label="Всего гемов" value={String(totalGems)} />
               </div>
+            </div>
+          )}
+
+          {tab === "week" && (
+            <div className="space-y-2">
+              <h3 className="font-black text-sm text-gray-600 uppercase">Последние 7 дней</h3>
+              {Object.keys(weekHistory).length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-6">Нет данных за неделю</p>
+              ) : (
+                Object.entries(weekHistory)
+                  .sort(([a], [b]) => b.localeCompare(a))
+                  .map(([date, day]) => {
+                    const d = new Date(date);
+                    const dayName = d.toLocaleDateString("ru-RU", { weekday: "short" });
+                    const dayAcc = day.tasksSolved > 0 ? Math.round((day.correctAnswers / day.tasksSolved) * 100) : 0;
+                    return (
+                      <div key={date} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
+                        <div>
+                          <div className="font-bold text-sm text-gray-700">{dayName}, {d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}</div>
+                          <div className="text-xs text-gray-400">{day.tasksSolved} задач · {Math.round(day.timeSpentMs / 60000)} мин</div>
+                        </div>
+                        <div className="font-black text-lg" style={{ color: dayAcc >= 70 ? "#10B981" : dayAcc >= 40 ? "#F59E0B" : "#EF4444" }}>
+                          {dayAcc}%
+                        </div>
+                      </div>
+                    );
+                  })
+              )}
             </div>
           )}
 

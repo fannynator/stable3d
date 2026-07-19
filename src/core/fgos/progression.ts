@@ -1,168 +1,139 @@
-import type { FGOSCurriculum, FGOSTopic } from "./fgos-tree";
+import type { SkillNode } from "./fgos-tree";
 
 /**
- * Pure progression logic for FGOS curriculum tree.
- * No React, no DOM, no side effects.
+ * Progression logic for the flat skill tree.
+ * - Skills of grade N are unlocked when ≥70% of grade N-1 skills are done.
+ * - Grade 1 skills are all unlocked initially.
+ * - Recommended skill: next incomplete skill in order, or lowest-accuracy skill.
  */
 
-export interface PlayerTopicProgress {
-  topicId: string;
+export interface PlayerSkillProgress {
+  skillId: string;
   progress: number; // 0..100
+  /** Last 10 answer results for this skill (true=correct) */
+  lastResults: boolean[];
+  /** Total time spent on this skill in ms */
+  totalTimeMs: number;
+}
+
+/** Whether the player has completed a given skill */
+export function isSkillCompleted(psp: PlayerSkillProgress): boolean {
+  return psp.progress >= 100;
+}
+
+/** Accuracy on a skill */
+export function skillAccuracy(psp: PlayerSkillProgress): number {
+  if (psp.lastResults.length === 0) return 1;
+  return psp.lastResults.filter(Boolean).length / psp.lastResults.length;
+}
+
+/** Get all skills for a grade */
+export function skillsByGrade(skills: SkillNode[], grade: number): SkillNode[] {
+  return skills.filter((s) => s.grade === grade);
 }
 
 /**
- * Flatten all topics from a curriculum into a single array.
+ * Which skills are unlocked right now.
+ * Grade 1: all unlocked (except completed).
+ * Grade N: all unlocked when ≥70% of grade N-1 skills are completed.
  */
-export function flattenTopics(curriculum: FGOSCurriculum): FGOSTopic[] {
-  const topics: FGOSTopic[] = [];
-  for (const grade of curriculum.grades) {
-    for (const quarter of grade.quarters) {
-      for (const topic of quarter.topics) {
-        topics.push(topic);
-      }
+export function getUnlockedSkills(
+  allSkills: SkillNode[],
+  completedIds: Set<string>
+): SkillNode[] {
+  const unlocked: SkillNode[] = [];
+
+  // Calculate per-grade completion
+  const gradeCompletion: Record<number, number> = {};
+  for (const sk of allSkills) {
+    if (!gradeCompletion[sk.grade]) gradeCompletion[sk.grade] = 0;
+    if (completedIds.has(sk.id)) gradeCompletion[sk.grade]++;
+  }
+  const gradeTotal: Record<number, number> = {};
+  for (const sk of allSkills) {
+    gradeTotal[sk.grade] = (gradeTotal[sk.grade] || 0) + 1;
+  }
+
+  for (const skill of allSkills) {
+    if (completedIds.has(skill.id)) continue;
+
+    if (skill.grade === 1) {
+      unlocked.push(skill);
+      continue;
+    }
+
+    // Grade gate: is previous grade 70%+ done?
+    const prevGrade = skill.grade - 1;
+    const prevTotal = gradeTotal[prevGrade] || 0;
+    const prevDone = gradeCompletion[prevGrade] || 0;
+    const prevRatio = prevTotal > 0 ? prevDone / prevTotal : 1;
+    if (prevRatio >= 0.7) {
+      unlocked.push(skill);
     }
   }
-  return topics;
+
+  return unlocked;
 }
 
 /**
- * Get a topic by its ID from a curriculum.
+ * Recommended skill: first unlocked skill not yet started,
+ * or the skill with lowest accuracy among started ones.
  */
-export function getTopicById(curriculum: FGOSCurriculum, topicId: string): FGOSTopic | undefined {
-  for (const grade of curriculum.grades) {
-    for (const quarter of grade.quarters) {
-      const topic = quarter.topics.find((t) => t.id === topicId);
-      if (topic) return topic;
-    }
+export function getRecommendedSkill(
+  allSkills: SkillNode[],
+  progressMap: Map<string, PlayerSkillProgress>,
+  completedIds: Set<string>
+): SkillNode | undefined {
+  const unlocked = getUnlockedSkills(allSkills, completedIds);
+
+  // Prefer skills already started (partial progress) with low accuracy
+  const started = unlocked.filter(
+    (s) => progressMap.has(s.id) && progressMap.get(s.id)!.progress > 0
+  );
+  if (started.length > 0) {
+    started.sort(
+      (a, b) =>
+        skillAccuracy(progressMap.get(a.id)!) -
+        skillAccuracy(progressMap.get(b.id)!)
+    );
+    return started[0];
   }
-  return undefined;
+
+  // Otherwise first unlocked in curriculum order
+  return unlocked[0];
 }
 
 /**
- * Check if a topic's prerequisites are all completed.
- */
-function arePrerequisitesMet(
-  topic: FGOSTopic,
-  completedTopicIds: Set<string>
-): boolean {
-  if (topic.prerequisites.length === 0) return true;
-  return topic.prerequisites.every((prereq) => completedTopicIds.has(prereq));
-}
-
-/**
- * Get the list of currently unlocked (available to start) topics.
- */
-export function getUnlockedTopics(
-  curriculum: FGOSCurriculum,
-  completedIds: Set<string>
-): FGOSTopic[] {
-  const allTopics = flattenTopics(curriculum);
-  return allTopics.filter((topic) => {
-    if (completedIds.has(topic.id)) return false; // already done
-    return arePrerequisitesMet(topic, completedIds);
-  });
-}
-
-/**
- * Get the next recommended topic to work on.
- * First available topic in the tree order, or undefined if all done.
- */
-export function getNextTopic(
-  curriculum: FGOSCurriculum,
-  completedIds: Set<string>
-): FGOSTopic | undefined {
-  return getUnlockedTopics(curriculum, completedIds)[0];
-}
-
-/**
- * Check whether a story chapter is gated behind uncompleted topics.
- * Returns the list of topic IDs that are still required for this chapter.
+ * Check if a chapter is gated behind uncompleted skills.
  */
 export function getChapterGates(
-  curriculum: FGOSCurriculum,
+  allSkills: SkillNode[],
   chapterId: string,
   completedIds: Set<string>
-): string[] {
-  const allTopics = flattenTopics(curriculum);
-  return allTopics
-    .filter((t) => t.gatesChapterIds.includes(chapterId) && !completedIds.has(t.id))
-    .map((t) => t.id);
+): SkillNode[] {
+  return allSkills.filter(
+    (s) => s.gatesChapterIds.includes(chapterId) && !completedIds.has(s.id)
+  );
 }
 
-/**
- * Whether a chapter is locked (at least one gate topic not completed).
- */
 export function isChapterGated(
-  curriculum: FGOSCurriculum,
+  allSkills: SkillNode[],
   chapterId: string,
   completedIds: Set<string>
 ): boolean {
-  return getChapterGates(curriculum, chapterId, completedIds).length > 0;
+  return getChapterGates(allSkills, chapterId, completedIds).length > 0;
 }
 
 /**
- * Get obstacle definitions for minigame runner.
- * Returns topics that can appear as obstacles, sorted by difficulty.
- */
-export function getObstaclesForGrade(
-  curriculum: FGOSCurriculum,
-  completedIds: Set<string>,
-  maxDifficulty: 1 | 2 | 3 = 3
-): { topic: FGOSTopic; difficulty: 1 | 2 | 3 }[] {
-  const allTopics = flattenTopics(curriculum);
-  return allTopics
-    .filter(
-      (t) =>
-        t.obstacleDifficulty <= maxDifficulty &&
-        (!completedIds.has(t.id) || t.obstacleType === "boss")
-    )
-    .map((t) => ({ topic: t, difficulty: t.obstacleDifficulty }))
-    .sort((a, b) => a.difficulty - b.difficulty);
-}
-
-/**
- * Get the grade label for a given topic.
- */
-export function getTopicGrade(
-  curriculum: FGOSCurriculum,
-  topicId: string
-): string | undefined {
-  for (const grade of curriculum.grades) {
-    for (const quarter of grade.quarters) {
-      if (quarter.topics.some((t) => t.id === topicId)) {
-        return grade.label;
-      }
-    }
-  }
-  return undefined;
-}
-
-/**
- * Get the quarter label for a given topic.
- */
-export function getTopicQuarter(
-  curriculum: FGOSCurriculum,
-  topicId: string
-): string | undefined {
-  for (const grade of curriculum.grades) {
-    for (const quarter of grade.quarters) {
-      if (quarter.topics.some((t) => t.id === topicId)) {
-        return quarter.label;
-      }
-    }
-  }
-  return undefined;
-}
-
-/**
- * Compute progress percentage for a grade (0-100).
+ * Grade completion percentage (0-100).
  */
 export function getGradeProgress(
-  curriculum: FGOSCurriculum,
-  completedIds: Set<string>
+  allSkills: SkillNode[],
+  completedIds: Set<string>,
+  grade: number
 ): number {
-  const allTopics = flattenTopics(curriculum);
-  if (allTopics.length === 0) return 100;
-  const completed = allTopics.filter((t) => completedIds.has(t.id)).length;
-  return Math.round((completed / allTopics.length) * 100);
+  const gradeSkills = skillsByGrade(allSkills, grade);
+  if (gradeSkills.length === 0) return 100;
+  const done = gradeSkills.filter((s) => completedIds.has(s.id)).length;
+  return Math.round((done / gradeSkills.length) * 100);
 }

@@ -2,14 +2,17 @@ import type { Skill } from "../../types";
 
 interface SkillCardProps {
   skill: Skill;
-  stars: number;
   delay?: number;
   onClick?: () => void;
 }
 
-export function SkillCard({ skill, stars, delay = 0, onClick }: SkillCardProps) {
+export function SkillCard({ skill, delay = 0, onClick }: SkillCardProps) {
   const locked = skill.status === "locked";
   const mastered = skill.status === "completed";
+  const diff = skill.difficulty || 1;
+  const diffLabel = diff === 3 ? "Сложный" : diff === 2 ? "Средний" : "Лёгкий";
+  const diffColor = diff === 3 ? "#EF4444" : diff === 2 ? "#F59E0B" : "#10B981";
+  const diffBg = diff === 3 ? "rgba(239,68,68,0.2)" : diff === 2 ? "rgba(245,158,11,0.2)" : "rgba(16,185,129,0.2)";
 
   return (
     <div
@@ -43,12 +46,20 @@ export function SkillCard({ skill, stars, delay = 0, onClick }: SkillCardProps) 
         {/* Title */}
         <div className="text-white font-black text-center text-sm drop-shadow leading-tight relative z-10">{skill.name}</div>
 
-        {/* Stars */}
-        <div className="flex gap-0.5 relative z-10">
-          {[0, 1, 2].map(i => (
-            <span key={i} className={`text-base leading-none ${i < stars ? "text-yellow-300" : "text-white/30"}`}>★</span>
-          ))}
-        </div>
+        {/* Difficulty badge */}
+        {!locked && !mastered && (
+          <div className="relative z-10 flex items-center gap-1 px-2.5 py-0.5 rounded-full text-white text-xs font-bold" style={{ background: diffBg, border: `1px solid ${diffColor}` }}>
+            <span style={{ color: diffColor }}>●</span>
+            {diffLabel}
+          </div>
+        )}
+
+        {/* Completed */}
+        {mastered && (
+          <div className="relative z-10 px-3 py-0.5 rounded-full text-white text-xs font-bold" style={{ background: "rgba(255,255,255,0.25)" }}>
+            Пройдено ✓
+          </div>
+        )}
       </div>
     </div>
   );

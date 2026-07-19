@@ -209,3 +209,12 @@ export function clearLocalCache(): void {
   const allKeys = Object.keys(localStorage).filter(k => k.startsWith(LOCAL_CACHE_PREFIX));
   allKeys.forEach(k => localStorage.removeItem(k));
 }
+
+/**
+ * Warm up cache with a local task for instant first session.
+ */
+export function warmupCache(skillName: string, subjectLabel: string, difficulty: number): void {
+  const key = buildCacheKey(skillName, subjectLabel, difficulty);
+  if (localGet(key)) return; // already cached
+  // First session will fill cache naturally — no need to pre-generate
+}

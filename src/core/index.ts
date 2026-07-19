@@ -2,29 +2,27 @@ export { calculateLessonReward, canAfford, getAchievementReward } from "./econom
 export { deriveCatMood, decayCat, feedCat, restCat } from "./player/cat";
 export { evaluateAchievements, getNewlyUnlocked } from "./player/achievements";
 
-// FGOS curriculum
-export type { FGOSTopic, FGOSQuarter, FGOSGrade, FGOSCurriculum, Subject as FGOSSubject } from "./fgos/fgos-tree";
-export { MATH_CURRICULUM } from "./fgos/math-grades";
-export { RUSSIAN_CURRICULUM } from "./fgos/russian-grades";
+// Skill tree
+export type { SkillNode, Subject as FGOSSubject } from "./fgos/fgos-tree";
+export { MATH_SKILLS } from "./fgos/math-grades";
+export { RUSSIAN_SKILLS } from "./fgos/russian-grades";
 export {
-  flattenTopics,
-  getTopicById,
-  getUnlockedTopics,
-  getNextTopic,
+  getUnlockedSkills,
+  getRecommendedSkill,
   isChapterGated,
   getChapterGates,
-  getObstaclesForGrade,
-  getTopicGrade,
-  getTopicQuarter,
   getGradeProgress,
+  skillsByGrade,
+  isSkillCompleted,
+  skillAccuracy,
 } from "./fgos/progression";
-export type { PlayerTopicProgress } from "./fgos/progression";
+export type { PlayerSkillProgress } from "./fgos/progression";
 
 // Analytics & Adaptive difficulty
-export { recordAnswer, getAccuracy, getAverageTimeMs, getRecentAccuracy, isSpeedDemon, needsExtraPractice } from "./player/analytics";
-export type { AnswerRecord, TopicAnalytics } from "./player/analytics";
-export { getDifficultyMode, getOlympiadVariant } from "./fgos/adaptive";
-export type { DifficultyMode } from "./fgos/adaptive";
+export { recordAnswer } from "./player/analytics";
+export type { AnswerRecord } from "./player/analytics";
+export { getDifficultyLevel } from "./fgos/adaptive";
+export type { DifficultyLevel } from "./fgos/adaptive";
 
 // AI Structured Outputs
 export type { AIStructuredTask } from "./tasks/ai-schema";

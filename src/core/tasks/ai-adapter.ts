@@ -1,6 +1,6 @@
 import type { AIStructuredTask } from "./ai-schema";
-import type { FGOSTopic } from "../fgos/fgos-tree";
-import type { DifficultyMode } from "../fgos/adaptive";
+import type { SkillNode } from "../fgos/fgos-tree";
+import type { DifficultyLevel } from "../fgos/adaptive";
 import { fetchTaskFromDeepSeek } from "./deepseek";
 import { fetchTaskFromLlama } from "./local-llama";
 import { getSubscriptionStatus } from "../../app/useSubscription";
@@ -201,6 +201,8 @@ function genFrac(difficulty: number): AIStructuredTask {
 const MATH_GENS: Record<string, (d: number) => AIStructuredTask> = {
   add: genAdd, sub: genSub, mul: genMul, div: genDiv,
   eq: genEq, geom: genGeom, frac: genFrac,
+  compare: genAdd, word: genAdd, time: genAdd, units: genAdd, money: genAdd, logic: genAdd,
+  speed: genAdd, charts: genAdd,
 };
 
 // ── Dynamic Russian generators ──
@@ -562,21 +564,23 @@ const RUSSIAN_GENS: Record<string, (d: number) => AIStructuredTask> = {
   zhishi: genZhiShi, soft: genSoft, vowel: genVowel,
   silent: genSilent, tsya: genTsya, prepri: genPrePri, nn: genNN,
   speechparts: genSpeechParts, cases: genCases, wordcomp: genWordComp, synonyms: genSynAnt,
+  alphabet: genZhiShi, capital: genSpeechParts, consonant: genVowel, hard_sign: genSoft,
+  word_parts: genWordComp, punct: genSpeechParts, pronouns: genSpeechParts,
 };
 
 // ── Unified generation ──
 
-function generateOneLocalTask(topic: FGOSTopic, difficulty: number): AIStructuredTask {
-  const gens = topic.subject === "math" ? MATH_GENS : RUSSIAN_GENS;
-  const gen = gens[topic.generatorId];
+function generateOneLocalTask(skill: SkillNode, difficulty: number): AIStructuredTask {
+  const gens = skill.subject === "math" ? MATH_GENS : RUSSIAN_GENS;
+  const gen = gens[skill.generatorId];
   if (gen) return gen(difficulty);
 
-  // Smart fallback for unknown generatorIds — use topic name for context
-  const correctAnswer = topic.subject === "math"
+  // Smart fallback for unknown generatorIds — use skill name for context
+  const correctAnswer = skill.subject === "math"
     ? String(rnd(1 + difficulty * 5, 20 + difficulty * 10))
     : "правильно";
 
-  const wrongAnswers = topic.subject === "math"
+  const wrongAnswers = skill.subject === "math"
     ? makeWrongs(Number(correctAnswer), 3).map(String)
     : ["неправильно", "не верно", "ошибка"];
 
@@ -586,25 +590,24 @@ function generateOneLocalTask(topic: FGOSTopic, difficulty: number): AIStructure
 
   return {
     catNarrative: pick(["Мур! Давай решать! 🐱", "Мур-мур! Интересная тема! 📚", "Мяу! Ты справишься! ⭐"]),
-    question: `Задание по теме «${topic.name}»: выбери правильный ответ`,
+    question: `Задание по теме «${skill.name}»: выбери правильный ответ`,
     options: shuffled as [string, string, string, string],
     correctIndex: idx,
-    catHint: `Подумай о теме «${topic.name}» и выбери верный вариант!`,
-    explanation: `Правильный ответ: ${correctAnswer}. Тема «${topic.name}» — отлично!`,
+    catHint: `Подумай о теме «${skill.name}» и выбери верный вариант!`,
+    explanation: `Правильный ответ: ${correctAnswer}. Тема «${skill.name}» — отлично!`,
     difficulty,
-    tags: [topic.id, topic.name],
+    tags: [skill.id, skill.name],
   };
 }
 
 export async function generateAISession(
-  topic: FGOSTopic,
-  mode: DifficultyMode = "standard",
+  skill: SkillNode,
+  difficulty: DifficultyLevel,
   count: number = 5,
   signal?: AbortSignal
 ): Promise<{ tasks: AIStructuredTask[]; source: "ai" | "local" }> {
-  const difficulty = mode === "olympiad" ? 3 : mode === "remedial" ? 1 : 2;
-  const subjectLabel = topic.subject === "math" ? "Математика" : "Русский язык";
-  const cacheKey = buildCacheKey(topic.name, subjectLabel, difficulty);
+  const subjectLabel = skill.subject === "math" ? "Математика" : "Русский язык";
+  const cacheKey = buildCacheKey(skill.name, subjectLabel, difficulty);
 
   // 1) Try cache pool first — randomly pick up to `count` unique tasks
   const { tasks: cachedTasks, fromCache } = pickFromPool(cacheKey, count);
@@ -618,15 +621,15 @@ export async function generateAISession(
     let t: AIStructuredTask | null = null;
 
     if (navigator.onLine && !(signal && signal.aborted)) {
-      t = await fetchTaskFromDeepSeek(topic.name, subjectLabel, difficulty, signal);
+      t = await fetchTaskFromDeepSeek(skill.name, subjectLabel, difficulty, signal);
     }
 
     if (!t && (navigator.onLine === false || (signal && signal.aborted))) {
-      t = await fetchTaskFromLlama(topic.name, subjectLabel, difficulty, signal);
+      t = await fetchTaskFromLlama(skill.name, subjectLabel, difficulty, signal);
     }
 
     if (!t) {
-      t = generateOneLocalTask(topic, difficulty);
+      t = generateOneLocalTask(skill, difficulty);
     } else {
       anyAi = true;
     }
@@ -641,9 +644,8 @@ export async function generateAISession(
 }
 
 export function generateAILesson(
-  topic: FGOSTopic,
-  mode: DifficultyMode = "standard"
+  skill: SkillNode,
+  difficulty: DifficultyLevel
 ): AIStructuredTask[] {
-  const difficulty = mode === "olympiad" ? 3 : mode === "remedial" ? 1 : 2;
-  return Array.from({ length: 5 }, () => generateOneLocalTask(topic, difficulty));
+  return Array.from({ length: 5 }, () => generateOneLocalTask(skill, difficulty));
 }

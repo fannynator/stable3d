@@ -1,33 +1,41 @@
 import { describe, it, expect } from "vitest";
-import { getDifficultyMode } from "../adaptive";
-import type { TopicAnalytics } from "../../player/analytics";
+import { getDifficultyLevel } from "../adaptive";
+import type { PlayerSkillProgress } from "../progression";
 
-describe("getDifficultyMode", () => {
-  it("returns standard for undefined analytics", () => {
-    expect(getDifficultyMode(undefined)).toBe("standard");
+describe("getDifficultyLevel", () => {
+  it("returns 1 for undefined progress", () => {
+    expect(getDifficultyLevel(undefined)).toBe(1);
   });
 
-  it("returns standard for normal player", () => {
-    const a: TopicAnalytics = {
-      topicId: "t", totalAnswered: 10, totalCorrect: 7, totalTimeMs: 50000, // avg 5s
-      lastTenResults: [true, false, true, true, false, true, true, false, true, true],
+  it("returns 1 when fewer than 3 answers", () => {
+    const p: PlayerSkillProgress = {
+      skillId: "t", progress: 20, lastResults: [true, false],
+      totalTimeMs: 5000,
     };
-    expect(getDifficultyMode(a)).toBe("standard");
+    expect(getDifficultyLevel(p)).toBe(1);
   });
 
-  it("returns remedial for struggling player", () => {
-    const a: TopicAnalytics = {
-      topicId: "t", totalAnswered: 10, totalCorrect: 3, totalTimeMs: 50000,
-      lastTenResults: [false, false, true, false, false, true, false, false, false, true],
+  it("returns 2 for 70% accuracy", () => {
+    const p: PlayerSkillProgress = {
+      skillId: "t", progress: 60, lastResults: [true, true, true, false, true], // 4/5 = 80%
+      totalTimeMs: 20000,
     };
-    expect(getDifficultyMode(a)).toBe("remedial");
+    expect(getDifficultyLevel(p)).toBe(2);
   });
 
-  it("returns olympiad for gifted player", () => {
-    const a: TopicAnalytics = {
-      topicId: "t", totalAnswered: 10, totalCorrect: 10, totalTimeMs: 20000, // avg 2s
-      lastTenResults: [true, true, true, true, true, true, true, true, true, true],
+  it("returns 3 for 90%+ accuracy", () => {
+    const p: PlayerSkillProgress = {
+      skillId: "t", progress: 100, lastResults: [true, true, true, true, true],
+      totalTimeMs: 20000,
     };
-    expect(getDifficultyMode(a)).toBe("olympiad");
+    expect(getDifficultyLevel(p)).toBe(3);
+  });
+
+  it("returns 1 for accuracy below 60%", () => {
+    const p: PlayerSkillProgress = {
+      skillId: "t", progress: 30, lastResults: [true, false, false, false, false],
+      totalTimeMs: 25000,
+    };
+    expect(getDifficultyLevel(p)).toBe(1);
   });
 });

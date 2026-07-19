@@ -1,4 +1,7 @@
+import type { DifficultyLevel } from "../core/fgos/adaptive";
 import type { Task } from "../app/types";
+
+// ═══ Helpers ═══
 
 function rnd(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -14,41 +17,60 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function makeWrongs(correct: number, count = 3): number[] {
+  // Ensure wrong answers are positive and at least somewhat different
+  const spread = Math.max(1, Math.ceil(correct * 0.15));
   const wrongs = new Set<number>();
+  const attempts = 0;
   while (wrongs.size < count) {
-    let delta: number;
-    if (correct <= 10) delta = rnd(-3, 3);
-    else if (correct <= 50) delta = rnd(-Math.floor(correct * 0.3), Math.floor(correct * 0.3));
-    else delta = rnd(-Math.floor(correct * 0.2), Math.floor(correct * 0.2));
+    const delta = rnd(-spread * 2, spread * 2);
     const candidate = correct + delta;
-    if (candidate !== correct && candidate >= 0 && !wrongs.has(candidate)) wrongs.add(candidate);
+    if (candidate !== correct && candidate > 0 && !wrongs.has(candidate)) {
+      wrongs.add(candidate);
+    }
   }
   return [...wrongs];
 }
 
-function choiceT(emoji: string, badge: string, badgeClass: string, question: string, correct: string | number, explanation: string): Task {
-  const allOptions = [correct, ...makeWrongs(correct as number)];
-  const options = shuffle(allOptions);
-  return { type: 'choice', emoji, badge, badgeClass, question, options, correctAns: correct, explanation };
+// ═══ Task constructors ═══
+
+function choiceT(
+  emoji: string, badge: string, badgeClass: string,
+  question: string, correct: number, explanation: string
+): Task {
+  const options = shuffle([correct, ...makeWrongs(correct, 3)]);
+  return { type: "choice", emoji, badge, badgeClass, question, options, correctAns: correct, explanation };
 }
 
-function inputT(emoji: string, badge: string, badgeClass: string, question: string, correct: string | number, explanation: string): Task {
-  return { type: 'input', emoji, badge, badgeClass, question, correctAns: correct, explanation };
+function inputT(
+  emoji: string, badge: string, badgeClass: string,
+  question: string, correct: number, explanation: string
+): Task {
+  return { type: "input", emoji, badge, badgeClass, question, correctAns: correct, explanation };
 }
 
-function pairT(emoji: string, badge: string, badgeClass: string, question: string, pairs: { left: string; right: string; answer: string | number }[], explanation: string): Task {
-  return { type: 'pair', emoji, badge, badgeClass, question, correctAns: pairs[0]?.answer ?? '', pairs, explanation };
+function pairT(
+  emoji: string, badge: string, badgeClass: string,
+  question: string,
+  pairs: { left: string; right: string; answer: string | number }[],
+  explanation: string
+): Task {
+  return { type: "pair", emoji, badge, badgeClass, question, correctAns: pairs[0]?.answer ?? "", pairs, explanation };
 }
 
-function visualT(emoji: string, badge: string, badgeClass: string, svg: string, question: string, correct: string | number, options: (string | number)[], explanation: string): Task {
-  const allOpts = options.includes(correct) ? options : [correct, ...options];
-  const uniqueOpts = [...new Set(allOpts)];
-  return { type: 'visual', emoji, badge, badgeClass, svg, question, options: uniqueOpts, correctAns: correct, explanation };
+function visualT(
+  emoji: string, badge: string, badgeClass: string,
+  svg: string, question: string, correct: number,
+  wrongOpts: number[], explanation: string
+): Task {
+  const all = [...new Set([correct, ...wrongOpts])].filter((n) => n > 0 || n === 0);
+  return { type: "visual", emoji, badge, badgeClass, svg, question, options: all, correctAns: correct, explanation };
 }
 
-function applesSVG(count: number, color = '#EF4444'): string {
+// ═══ SVG helpers ═══
+
+function applesSVG(count: number, color = "#EF4444"): string {
   const rows = Math.ceil(count / 5);
-  let circles = '';
+  let circles = "";
   for (let r = 0; r < rows; r++) {
     const inRow = r === rows - 1 ? (count % 5 || 5) : 5;
     for (let c = 0; c < inRow; c++) {
@@ -67,7 +89,7 @@ function applesTwoGroups(a: number, b: number): string {
   const rowsB = Math.ceil(b / 5);
   const H = Math.max(rowsA, rowsB) * 32 + 30;
   let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 ${H}" width="300" height="${H}">`;
-  out += `<text x="75" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">🍎 группа А</text>`;
+  out += `<text x="75" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">Группа А</text>`;
   for (let r = 0; r < rowsA; r++) {
     const inRow = r === rowsA - 1 ? (a % 5 || 5) : 5;
     for (let c = 0; c < inRow; c++) {
@@ -77,7 +99,7 @@ function applesTwoGroups(a: number, b: number): string {
 <line x1="${cx - 4}" y1="${cy - 5}" x2="${cx + 1}" y2="${cy - 9}" stroke="#7F1D1D" stroke-width="2" stroke-linecap="round"/>`;
     }
   }
-  out += `<text x="225" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">🍎 группа Б</text>`;
+  out += `<text x="225" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">Группа Б</text>`;
   for (let r = 0; r < rowsB; r++) {
     const inRow = r === rowsB - 1 ? (b % 5 || 5) : 5;
     for (let c = 0; c < inRow; c++) {
@@ -87,14 +109,14 @@ function applesTwoGroups(a: number, b: number): string {
 <line x1="${cx - 4}" y1="${cy - 5}" x2="${cx + 1}" y2="${cy - 9}" stroke="#92400E" stroke-width="2" stroke-linecap="round"/>`;
     }
   }
-  out += '</svg>';
+  out += "</svg>";
   return out;
 }
 
 function subSVG(total: number, eaten: number): string {
   const H = Math.ceil(total / 5) * 32 + 30;
   let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 ${H}" width="280" height="${H}">`;
-  out += `<text x="140" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">Было ${total} 🍎</text>`;
+  out += `<text x="140" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">Было ${total} яблок</text>`;
   for (let r = 0; r < Math.ceil(total / 5); r++) {
     const inRow = r === Math.ceil(total / 5) - 1 ? (total % 5 || 5) : 5;
     for (let c = 0; c < (r < Math.ceil(total / 5) - 1 ? 5 : inRow); c++) {
@@ -102,9 +124,9 @@ function subSVG(total: number, eaten: number): string {
       const cx = 40 + c * 36;
       const cy = 30 + r * 32;
       const isEaten = idx < eaten;
-      const fill = isEaten ? '#E2E8F0' : '#EF4444';
-      const stroke = isEaten ? '#CBD5E1' : '#B91C1C';
-      out += `<circle cx="${cx}" cy="${cy}" r="11" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-dasharray="${isEaten ? '3 2' : 'none'}"/>`;
+      const fill = isEaten ? "#E2E8F0" : "#EF4444";
+      const stroke = isEaten ? "#CBD5E1" : "#B91C1C";
+      out += `<circle cx="${cx}" cy="${cy}" r="11" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-dasharray="${isEaten ? "3 2" : "none"}"/>`;
       if (isEaten) {
         out += `<line x1="${cx - 5}" y1="${cy - 5}" x2="${cx + 5}" y2="${cy + 5}" stroke="#CBD5E1" stroke-width="2"/>
 <line x1="${cx + 5}" y1="${cy - 5}" x2="${cx - 5}" y2="${cy + 5}" stroke="#CBD5E1" stroke-width="2"/>`;
@@ -113,7 +135,7 @@ function subSVG(total: number, eaten: number): string {
       }
     }
   }
-  out += '</svg>';
+  out += "</svg>";
   return out;
 }
 
@@ -121,7 +143,7 @@ function mulGridSVG(rows: number, cols: number): string {
   const W = Math.min(300, cols * 36 + 20);
   const H = rows * 32 + 30;
   let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
-  out += `<text x="${W / 2}" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">${rows} ряда × ${cols} 🍎</text>`;
+  out += `<text x="${W / 2}" y="14" text-anchor="middle" font-size="11" fill="#94A3B8" font-weight="700">${rows} ряда × ${cols} яблок</text>`;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (cols <= 8) {
@@ -132,28 +154,7 @@ function mulGridSVG(rows: number, cols: number): string {
       }
     }
   }
-  out += '</svg>';
-  return out;
-}
-
-function divBasketsSVG(total: number, baskets: number): string {
-  const perBasket = Math.floor(total / baskets);
-  const rem = total - perBasket * baskets;
-  const W = baskets * 60 + 20;
-  const H = (perBasket + (rem > 0 ? 1 : 0)) * 22 + 80;
-  let out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
-  out += `<text x="${W / 2}" y="12" text-anchor="middle" font-size="10" fill="#94A3B8" font-weight="700">${total} 🍎 в ${baskets} корзинах</text>`;
-  for (let b = 0; b < baskets; b++) {
-    const bx = 14 + b * 60;
-    out += `<path d="M${bx} 40 L${bx + 10} ${H - 16} L${bx + 38} ${H - 16} L${bx + 48} 40 Z" fill="#D4A373" stroke="#B8845A" stroke-width="1.5"/>`;
-    const count = b < rem ? perBasket + 1 : perBasket;
-    for (let a = 0; a < count; a++) {
-      const ax = bx + 14 + (a % 3) * 16;
-      const ay = H - 28 - Math.floor(a / 3) * 18;
-      out += `<circle cx="${ax}" cy="${ay}" r="5" fill="#EF4444" stroke="#B91C1C" stroke-width="0.8"/>`;
-    }
-  }
-  out += '</svg>';
+  out += "</svg>";
   return out;
 }
 
@@ -196,436 +197,664 @@ function pizzaSVG(eaten: number, total: number): string {
     const x2 = 100 + 70 * Math.cos(toRad);
     const y2 = 100 + 70 * Math.sin(toRad);
     const eatenSlice = i < eaten;
-    slices.push(`<path d="M100 100 L${x1} ${y1} A70 70 0 0 1 ${x2} ${y2} Z" fill="${eatenSlice ? '#E2E8F0' : '#F59E0B'}" stroke="#92400E" stroke-width="1.5"/>`);
+    slices.push(`<path d="M100 100 L${x1} ${y1} A70 70 0 0 1 ${x2} ${y2} Z" fill="${eatenSlice ? "#E2E8F0" : "#F59E0B"}" stroke="#92400E" stroke-width="1.5"/>`);
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-${slices.join('')}
+${slices.join("")}
 <text x="100" y="190" text-anchor="middle" font-size="12" fill="#94A3B8" font-weight="700">Съедено ${eaten} из ${total}</text>
 </svg>`;
 }
 
-function generateAddLesson(): Task[] {
-  const t: Task[] = [];
-  const add = (a: number, b: number): number => a + b;
+// ═══ Shuffle tasks for variety (except warmup first, boss last) ═══
 
-  {
-    const [a, b] = [rnd(3, 15), rnd(3, 15)];
-    t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `${a} + ${b} = ?`, add(a, b), 'Просто складываем два числа'));
-  }
-  {
-    const [a, b] = [rnd(3, 7), rnd(3, 7)];
-    const svg = applesTwoGroups(a, b);
-    t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg, `Сколько всего яблок?`, add(a, b), makeWrongs(add(a, b)), `${a} красных + ${b} жёлтых = ${add(a, b)}`));
-  }
-  {
-    const [a, b] = [rnd(10, 40), rnd(10, 40)];
-    t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${a} + ${b} = ?`, add(a, b), `Складываем: ${a} + ${b}`));
-  }
-  {
-    const pd: { left: string; right: string; answer: string | number }[] = [];
-    const used = new Set<number>();
-    while (pd.length < 3) {
-      const [a, b] = [rnd(5, 30), rnd(5, 30)];
-      const ans = add(a, b);
-      if (!used.has(ans)) { used.add(ans); pd.push({ left: `${a} + ${b}`, right: `${ans}`, answer: ans }); }
-    }
-    t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини выражение с ответом:', pd, 'Сопоставляем суммы'));
-  }
-  {
-    const [a, b] = [rnd(15, 60), rnd(10, 40)];
-    t.push(inputT('✏️', 'Ввод', 'badge-input', `${a} + ${b} = ?`, add(a, b), `${a} + ${b} = ${add(a, b)}`));
-  }
-  {
-    const secret = rnd(10, 30);
-    t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
-      `Если у Маши ${secret} конфет, а Петя дал ей ещё 0, сколько стало?`,
-      secret,
-      'Если прибавить 0 — ничего не меняется! Не дай себя обмануть'));
-  }
-  {
-    const [a, b, c] = [rnd(10, 30), rnd(10, 30), rnd(10, 30)];
-    t.push(inputT('✏️', 'Ввод', 'badge-input',
-      `${a} + ${b} + ${c} = ?`, add(add(a, b), c),
-      `${a}+${b}=${add(a, b)}, +${c}=${add(add(a, b), c)}`));
-  }
-  {
-    const [apples, more] = [rnd(20, 50), rnd(10, 30)];
-    t.push(inputT('⭐', 'Босс', 'badge-boss',
-      `В саду было ${apples} яблок. Привезли ещё ${more}. Сколько всего?`,
-      add(apples, more),
-      `${apples} + ${more} = ${add(apples, more)}`));
-  }
-  return t;
+function shuffleTasks(tasks: Task[]): Task[] {
+  const [warmup, ...rest] = tasks;
+  const boss = rest.pop();
+  const middle = shuffle(rest);
+  return [warmup, ...middle, ...(boss ? [boss] : [])];
 }
 
-function generateSubLesson(): Task[] {
-  const t: Task[] = [];
-  const g = (): [number, number] => { const x = rnd(15, 50); const y = rnd(3, x - 3); return [x, y]; };
-  const sub = (a: number, b: number): number => a - b;
-
-  {
-    const [a, b] = g();
-    t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `${a} − ${b} = ?`, sub(a, b), 'Вычитаем меньшее из большего'));
-  }
-  {
-    const total = rnd(8, 15);
-    const eaten = rnd(2, total - 2);
-    const svg = subSVG(total, eaten);
-    t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
-      `Сколько яблок осталось?`, total - eaten,
-      makeWrongs(total - eaten),
-      `Было ${total}, съели ${eaten} → осталось ${total - eaten}`));
-  }
-  {
-    const [a, b] = g();
-    t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${a} − ${b} = ?`, sub(a, b), `${a} − ${b} = ${sub(a, b)}`));
-  }
-  {
-    const pd: { left: string; right: string; answer: string | number }[] = [];
-    const used = new Set<number>();
-    while (pd.length < 3) {
-      const [a, b] = g();
-      const ans = sub(a, b);
-      if (!used.has(ans)) { used.add(ans); pd.push({ left: `${a} − ${b}`, right: `${ans}`, answer: ans }); }
-    }
-    t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини выражение с ответом:', pd, 'Сопоставляем разности'));
-  }
-  {
-    const [a, b] = g();
-    t.push(inputT('✏️', 'Ввод', 'badge-input', `${a} − ${b} = ?`, sub(a, b), `${a} − ${b} = ${sub(a, b)}`));
-  }
-  {
-    const n = rnd(10, 25);
-    const decoy = rnd(3, 8);
-    t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
-      `${n} − ${decoy} + ${decoy} = ?`,
-      n,
-      `Сначала вычли ${decoy}, потом прибавили — вернулись к ${n}! Порядок действий важен`));
-  }
-  {
-    const [money, book, pen] = [rnd(40, 90), rnd(10, 25), rnd(5, 12)];
-    const ans7 = money - book - pen;
-    t.push(inputT('✏️', 'Ввод', 'badge-input',
-      `У Маши ${money} руб. Купила книгу за ${book} руб. и ручку за ${pen} руб. Осталось?`,
-      ans7,
-      `${money} − ${book} − ${pen} = ${ans7}`));
-  }
-  {
-    const [was, spent, earned] = [rnd(60, 150), rnd(20, 60), rnd(10, 40)];
-    const ans8 = was - spent + earned;
-    t.push(inputT('⭐', 'Босс', 'badge-boss',
-      `На счету было ${was}₽. Потратили ${spent}₽, потом пришло ${earned}₽. Сколько стало?`,
-      ans8,
-      `${was} − ${spent} + ${earned} = ${ans8}`));
-  }
-  return t;
+interface RangeMap {
+  [key: number]: { a: [number, number]; b: [number, number] };
 }
 
-function generateMulLesson(): Task[] {
-  const t: Task[] = [];
-  const g = (): [number, number] => [rnd(2, 10), rnd(2, 10)];
-  const mul = (a: number, b: number): number => a * b;
+const ADD_RANGES: RangeMap = {
+  1: { a: [1, 10], b: [1, 5] },
+  2: { a: [5, 50], b: [3, 30] },
+  3: { a: [10, 99], b: [5, 70] },
+};
 
-  {
-    const [a, b] = g();
-    t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `${a} × ${b} = ?`, mul(a, b), 'Умножаем — это как сложить b раз число a'));
-  }
-  {
-    const [rows, cols] = [rnd(2, 5), rnd(3, 6)];
-    const svg = mulGridSVG(rows, cols);
-    t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
-      `Сколько всего яблок?`, mul(rows, cols),
-      makeWrongs(mul(rows, cols)),
-      `${rows} ряда × ${cols} в ряду = ${mul(rows, cols)}`));
-  }
-  {
-    const [a, b] = g();
-    t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${a} × ${b} = ?`, mul(a, b), `${a} × ${b} = ${mul(a, b)}`));
-  }
-  {
-    const pd: { left: string; right: string; answer: string | number }[] = [];
-    const used = new Set<number>();
-    while (pd.length < 3) {
-      const [a, b] = g();
-      const ans = mul(a, b);
-      if (!used.has(ans)) { used.add(ans); pd.push({ left: `${a} × ${b}`, right: `${ans}`, answer: ans }); }
-    }
-    t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини выражение с ответом:', pd, 'Сопоставляем произведения'));
-  }
-  {
-    const [a, b] = g();
-    t.push(inputT('✏️', 'Ввод', 'badge-input', `${a} × ${b} = ?`, mul(a, b), `${a} × ${b} = ${mul(a, b)}`));
-  }
-  {
-    const n = rnd(3, 9);
-    t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
-      `${n} × 1 × 1 × 1 = ?`,
-      n,
-      `Умножать на 1 можно сколько угодно — число не изменится! ${n} × 1 = ${n}`));
-  }
-  {
-    const [a, b, c] = [rnd(2, 6), rnd(2, 6), rnd(2, 5)];
-    t.push(inputT('✏️', 'Ввод', 'badge-input',
-      `${a} × ${b} × ${c} = ?`,
-      mul(mul(a, b), c),
-      `${a}×${b}=${mul(a, b)}, ×${c}=${mul(mul(a, b), c)}`));
-  }
-  {
-    const [shelves, books] = [rnd(3, 7), rnd(4, 12)];
-    t.push(inputT('⭐', 'Босс', 'badge-boss',
-      `${shelves} полки, на каждой по ${books} книг. Сколько всего?`,
-      mul(shelves, books),
-      `${shelves} × ${books} = ${mul(shelves, books)}`));
-  }
-  return t;
+const SUB_RANGES: RangeMap = {
+  1: { a: [5, 12], b: [1, 5] },
+  2: { a: [10, 50], b: [3, 25] },
+  3: { a: [20, 99], b: [5, 40] },
+};
+
+const MUL_RANGES: Record<number, { a: [number, number]; b: [number, number] }> = {
+  1: { a: [2, 5], b: [2, 5] },
+  2: { a: [2, 9], b: [2, 9] },
+  3: { a: [6, 12], b: [3, 12] },
+};
+
+const DIV_RANGE = { b: [2, 9], c: [2, 9] } as const;
+
+const EQ_RANGES: RangeMap = {
+  1: { a: [2, 8], b: [1, 4] },
+  2: { a: [3, 12], b: [2, 6] },
+  3: { a: [5, 20], b: [3, 10] },
+};
+
+const GEOM_RECT: Record<number, { w: [number, number]; h: [number, number] }> = {
+  1: { w: [2, 5], h: [2, 5] },
+  2: { w: [3, 8], h: [3, 8] },
+  3: { w: [5, 12], h: [4, 10] },
+};
+
+// ═══ Generators ═══
+
+export function generateAddLesson(diff: DifficultyLevel = 2): Task[] {
+  const R = ADD_RANGES[diff];
+  const add = (a: number, b: number) => a + b;
+  const tasks: Task[] = [];
+
+  // Warmup — always easy
+  const [wa, wb] = [rnd(R.a[0], Math.min(R.a[1], 15)), rnd(R.b[0], Math.min(R.b[1], 10))];
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup", `${wa} + ${wb} = ?`, add(wa, wb), "Просто складываем два числа"));
+
+  // Visual — apples
+  const [va, vb] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  const sumV = add(va, vb);
+  tasks.push(visualT("🖼️", "Визуальное", "badge-visual",
+    applesTwoGroups(va, vb), "Сколько всего яблок?", sumV, makeWrongs(sumV, 3),
+    `${va} красных + ${vb} жёлтых = ${sumV}`));
+
+  // Choice
+  const [ca, cb] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice", `${ca} + ${cb} = ?`, add(ca, cb), `Складываем: ${ca} + ${cb}`));
+
+  // Input
+  const [ia, ib] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(inputT("✏️", "Ввод", "badge-input", `${ia} + ${ib} = ?`, add(ia, ib), `${ia} + ${ib} = ${add(ia, ib)}`));
+
+  // Trap — add 0
+  const trap = rnd(3, 20);
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    `У Маши ${trap} конфет, Петя дал ещё 0. Сколько стало?`,
+    trap, "Если прибавить 0 — ничего не меняется!"));
+
+  // Boss — word problem
+  const [bossA, bossB, bossC] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1]), rnd(R.b[0], R.b[1])];
+  const bossSum = bossA + bossB + bossC;
+  tasks.push(inputT("⭐", "Босс", "badge-boss",
+    `В саду ${bossA} яблок, привезли ${bossB} и ещё ${bossC}. Сколько всего?`,
+    bossSum, `${bossA}+${bossB}+${bossC}=${bossSum}`));
+
+  return shuffleTasks(tasks);
 }
 
-function generateDivLesson(): Task[] {
-  const t: Task[] = [];
-  const g = (): [number, number] => { const b = rnd(2, 8); const c = rnd(2, 8); return [b * c, b]; };
-  const div = (a: number, b: number): number => a / b;
+export function generateSubLesson(diff: DifficultyLevel = 2): Task[] {
+  const R = SUB_RANGES[diff];
+  const tasks: Task[] = [];
 
-  {
-    const [a, b] = g();
-    t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `${a} ÷ ${b} = ?`, div(a, b), 'Делим поровну'));
-  }
-  {
-    const total = rnd(8, 20);
-    const baskets = rnd(2, 4);
-    const svg = divBasketsSVG(total, baskets);
-    const perBasket = Math.floor(total / baskets);
-    t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
-      `Сколько яблок в одной корзине?`, perBasket,
-      [...new Set([perBasket, perBasket + 1, perBasket - 1, total])],
-      `${total} ÷ ${baskets} = ${perBasket} (остаток ${total - perBasket * baskets})`));
-  }
-  {
-    const [a, b] = g();
-    t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${a} ÷ ${b} = ?`, div(a, b), `${a} ÷ ${b} = ${div(a, b)}`));
-  }
-  {
-    const pd: { left: string; right: string; answer: string | number }[] = [];
-    const used = new Set<number>();
-    while (pd.length < 3) {
-      const b = rnd(2, 7); const c = rnd(2, 7); const a = b * c;
-      if (!used.has(c)) { used.add(c); pd.push({ left: `${a} ÷ ${b}`, right: `${c}`, answer: c }); }
-    }
-    t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини выражение с ответом:', pd, 'Сопоставляем частные'));
-  }
-  {
-    const [a, b] = g();
-    t.push(inputT('✏️', 'Ввод', 'badge-input', `${a} ÷ ${b} = ?`, div(a, b), `${a} ÷ ${b} = ${div(a, b)}`));
-  }
-  {
-    const n = rnd(5, 30);
-    t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
-      `${n} ÷ 1 = ?`,
-      n,
-      `Любое число делить на 1 — остаётся собой! ${n} ÷ 1 = ${n}`));
-  }
-  {
-    const [a, b] = [rnd(20, 60), rnd(2, 6)];
-    const ans7 = Math.floor(a / b);
-    const rem7 = a - ans7 * b;
-    t.push(inputT('✏️', 'Ввод', 'badge-input',
-      `${a} ÷ ${b} = ? (только целая часть)`,
-      ans7,
-      `${a} ÷ ${b} = ${ans7} (остаток ${rem7})`));
-  }
-  {
-    const [candies, friends] = [rnd(20, 50), rnd(3, 7)];
-    const ans8 = Math.floor(candies / friends);
-    const rem8 = candies - ans8 * friends;
-    t.push(inputT('⭐', 'Босс', 'badge-boss',
-      `${candies} конфет на ${friends} друзей. Сколько каждому? (ост.${rem8})`,
-      ans8,
-      `${candies} ÷ ${friends} = ${ans8}`));
-  }
-  return t;
+  const p = (): [number, number] => {
+    const a = rnd(R.a[0], R.a[1]);
+    const b = rnd(R.b[0], Math.min(a - 1, R.b[1]));
+    return [a, b || 1];
+  };
+
+  // Warmup
+  const [wa, wb] = p();
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup", `${wa} − ${wb} = ?`, wa - wb, "Вычитаем меньшее из большего"));
+
+  // Visual
+  const totalV = rnd(5, 12);
+  const eatenV = rnd(2, totalV - 1);
+  tasks.push(visualT("🖼️", "Визуальное", "badge-visual",
+    subSVG(totalV, eatenV), "Сколько яблок осталось?", totalV - eatenV,
+    makeWrongs(totalV - eatenV, 3),
+    `Было ${totalV}, съели ${eatenV} → осталось ${totalV - eatenV}`));
+
+  // Choice
+  const [ca, cb] = p();
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice", `${ca} − ${cb} = ?`, ca - cb, `${ca} − ${cb} = ${ca - cb}`));
+
+  // Input
+  const [ia, ib] = p();
+  tasks.push(inputT("✏️", "Ввод", "badge-input", `${ia} − ${ib} = ?`, ia - ib, `${ia} − ${ib} = ${ia - ib}`));
+
+  // Trap — add then subtract back
+  const n = rnd(5, 20);
+  const decoy = rnd(2, 5);
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    `${n} − ${decoy} + ${decoy} = ?`, n,
+    `Вычли ${decoy}, потом прибавили — вернулись к ${n}!`));
+
+  // Boss
+  const [money, book, pen] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1]), rnd(R.b[0], R.b[1])];
+  const bossAns = money - book - pen;
+  tasks.push(inputT("⭐", "Босс", "badge-boss",
+    `Было ${money}₽. Купила книгу за ${book}₽ и ручку за ${pen}₽. Осталось?`,
+    bossAns, `${money}−${book}−${pen}=${bossAns}`));
+
+  return shuffleTasks(tasks);
 }
 
-function generateEqLesson(): Task[] {
-  const t: Task[] = [];
+export function generateMulLesson(diff: DifficultyLevel = 2): Task[] {
+  const R = MUL_RANGES[diff];
+  const tasks: Task[] = [];
+  const p = (): [number, number] => [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
 
-  {
-    const x = rnd(2, 12); const a = rnd(1, 8);
-    t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `x + ${a} = ${x + a}. x = ?`, x, `x = ${x + a} − ${a} = ${x}`));
-  }
-  {
-    const x = rnd(2, 10); const a = rnd(1, 6);
-    const svg = eqScaleSVG(`x + ${a}`, x + a);
-    t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
-      `Чему равен x?`, x,
-      makeWrongs(x),
-      `На весах слева x + ${a}, справа ${x + a}. Значит x = ${x}`));
-  }
-  {
-    const x = rnd(2, 10); const mul = rnd(2, 5);
-    t.push(choiceT('🎯', 'Выбор', 'badge-choice', `${mul} × x = ${mul * x}. x = ?`, x, `x = ${mul * x} ÷ ${mul} = ${x}`));
-  }
-  {
-    const pd: { left: string; right: string; answer: string | number }[] = [];
-    const used = new Set<number>();
-    while (pd.length < 3) {
-      const x = rnd(2, 10); const a = rnd(1, 6);
-      const key = `x + ${a} = ${x + a}`;
-      if (!used.has(x)) { used.add(x); pd.push({ left: key, right: `x = ${x}`, answer: x }); }
-    }
-    t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини уравнение с ответом:', pd, 'Решаем уравнения'));
-  }
-  {
-    const x = rnd(2, 12); const a = rnd(2, 8);
-    t.push(inputT('✏️', 'Ввод', 'badge-input', `x + ${a} = ${x + a}. x = ?`, x, `x = ${x + a} − ${a} = ${x}`));
-  }
-  {
-    const x = rnd(3, 10);
-    t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
-      `2 × x + 3 = ${2 * x + 3}. x = ?`,
-      x,
-      `Сначала отними 3: 2x = ${2 * x}, потом раздели на 2 → x = ${x}`));
-  }
-  {
-    const x = rnd(2, 8); const mul = rnd(2, 5);
-    t.push(inputT('✏️', 'Ввод', 'badge-input',
-      `${mul} × x − 2 = ${mul * x - 2}. x = ?`,
-      x,
-      `Сначала +2: ${mul}x = ${mul * x}, потом ÷${mul} → x = ${x}`));
-  }
-  {
-    const x = rnd(3, 8);
-    t.push(inputT('⭐', 'Босс', 'badge-boss',
-      `3 коробки с яблоками и ещё 2 яблока = ${3 * x + 2}. Сколько в коробке?`,
-      x,
-      `${3 * x + 2} − 2 = ${3 * x}, ÷3 = ${x}`));
-  }
-  return t;
+  // Warmup
+  const [wa, wb] = p();
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup", `${wa} × ${wb} = ?`, wa * wb, "Умножаем — это сложить b раз число a"));
+
+  // Visual grid
+  const [rows, cols] = [rnd(2, Math.min(4, R.a[1])), rnd(2, Math.min(5, R.b[1]))];
+  tasks.push(visualT("🖼️", "Визуальное", "badge-visual",
+    mulGridSVG(rows, cols), "Сколько всего яблок?", rows * cols,
+    makeWrongs(rows * cols, 3), `${rows} ряда × ${cols} = ${rows * cols}`));
+
+  // Choice
+  const [ca, cb] = p();
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice", `${ca} × ${cb} = ?`, ca * cb, `${ca} × ${cb} = ${ca * cb}`));
+
+  // Input
+  const [ia, ib] = p();
+  tasks.push(inputT("✏️", "Ввод", "badge-input", `${ia} × ${ib} = ?`, ia * ib, `${ia} × ${ib} = ${ia * ib}`));
+
+  // Trap — multiply by 1
+  const tn = rnd(2, 9);
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    `${tn} × 1 × 1 = ?`, tn, `Умножать на 1 не меняет число! ${tn} × 1 = ${tn}`));
+
+  // Boss
+  const [shelves, books] = [rnd(2, Math.min(8, R.a[1])), rnd(2, Math.min(6, R.b[1]))];
+  tasks.push(inputT("⭐", "Босс", "badge-boss",
+    `${shelves} полки по ${books} книг. Сколько всего?`,
+    shelves * books, `${shelves} × ${books} = ${shelves * books}`));
+
+  return shuffleTasks(tasks);
 }
 
-function generateGeomLesson(): Task[] {
-  const t: Task[] = [];
-  const rect = (): [number, number] => [rnd(3, 8), rnd(3, 8)];
-  const sq = (): number => rnd(3, 7);
+export function generateDivLesson(diff: DifficultyLevel = 2): Task[] {
+  const tasks: Task[] = [];
 
-  {
-    const s = sq();
-    t.push(choiceT('🔥', 'Разминка', 'badge-warmup', `Квадрат со стороной ${s}. Периметр?`, 4 * s, `P = 4 × ${s} = ${4 * s}`));
+  // Generate two numbers that divide evenly
+  const p = (): [number, number] => {
+    const b = rnd(DIV_RANGE.b[0], DIV_RANGE.b[1]);
+    const c = rnd(DIV_RANGE.c[0], DIV_RANGE.c[1]);
+    return [b * c, b];
+  };
+
+  const div = (a: number, b: number) => a / b;
+
+  // Warmup
+  const [wa, wb] = p();
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup", `${wa} ÷ ${wb} = ?`, div(wa, wb), "Делим поровну"));
+
+  // Choice
+  const [ca, cb] = p();
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice", `${ca} ÷ ${cb} = ?`, div(ca, cb), `${ca} ÷ ${cb} = ${div(ca, cb)}`));
+
+  // Input
+  const [ia, ib] = p();
+  tasks.push(inputT("✏️", "Ввод", "badge-input", `${ia} ÷ ${ib} = ?`, div(ia, ib), `${ia} ÷ ${ib} = ${div(ia, ib)}`));
+
+  // Trap — divide by 1
+  const tn = rnd(5, 30);
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    `${tn} ÷ 1 = ?`, tn, `Любое число ÷ 1 = оно же!`));
+
+  // Division with remainder
+  if (diff >= 2) {
+    const [a, b] = [rnd(15, 50), rnd(2, 7)];
+    const quot = Math.floor(a / b);
+    const rem = a - quot * b;
+    tasks.push(inputT("✏️", "Ввод", "badge-input",
+      `${a} ÷ ${b} = ? (целая часть)`,
+      quot, `${a} ÷ ${b} = ${quot} (остаток ${rem})`));
   }
-  {
-    const [w, h] = rect();
-    const svg = geomRectSVG(w, h, `Периметр?`);
-    t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
-      `Чему равен периметр?`, 2 * (w + h),
-      makeWrongs(2 * (w + h)),
-      `P = 2×(${w}+${h}) = ${2 * (w + h)}`));
-  }
-  {
-    const [w, h] = rect();
-    t.push(choiceT('🎯', 'Выбор', 'badge-choice', `Прямоугольник ${w}×${h}. Площадь?`, w * h, `S = ${w} × ${h} = ${w * h}`));
-  }
-  {
-    const pd: { left: string; right: string; answer: string | number }[] = [];
-    for (let i = 0; i < 3; i++) {
-      const [w, h] = rect();
-      pd.push({ left: `Прям. ${w}×${h} — S`, right: `${w * h}`, answer: w * h });
-    }
-    t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини фигуру с площадью:', pd, 'Сопоставляем площади'));
-  }
-  {
-    const [w, h] = rect();
-    t.push(inputT('✏️', 'Ввод', 'badge-input', `Прямоугольник ${w}×${h}. Периметр?`, 2 * (w + h), `P = 2×(${w}+${h}) = ${2 * (w + h)}`));
-  }
-  {
-    const s = sq();
-    t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
-      `Квадрат со стороной ${s}. Периметр = ? (НЕ площадь!)`,
-      4 * s,
-      `P = 4 × ${s} = ${4 * s}. Не перепутай с S = ${s * s}!`));
-  }
-  {
-    const [w, h] = rect();
-    t.push(inputT('✏️', 'Ввод', 'badge-input',
-      `Прямоугольник ${w}×${h}. Площадь?`,
-      w * h,
-      `S = ${w} × ${h} = ${w * h}`));
-  }
-  {
-    const [w, h] = [rnd(4, 10), rnd(3, 8)];
-    t.push(inputT('⭐', 'Босс', 'badge-boss',
-      `Комната ${w}×${h} м. Периметр и площадь (через запятую)`,
-      `${2 * (w + h)},${w * h}`,
-      `P=${2 * (w + h)}, S=${w * h}`));
-  }
-  return t;
+
+  // Boss
+  const [candies, friends] = [rnd(12, 40), rnd(2, 5)];
+  const bossAns = Math.floor(candies / friends);
+  const bossRem = candies - bossAns * friends;
+  tasks.push(inputT("⭐", "Босс", "badge-boss",
+    `${candies} конфет на ${friends} друзей. Каждому? (ост.${bossRem})`,
+    bossAns, `${candies} ÷ ${friends} = ${bossAns}`));
+
+  return shuffleTasks(tasks);
 }
 
-function generateFracLesson(): Task[] {
-  const t: Task[] = [];
+export function generateEqLesson(diff: DifficultyLevel = 2): Task[] {
+  const R = EQ_RANGES[diff];
+  const tasks: Task[] = [];
 
-  t.push(choiceT('🔥', 'Разминка', 'badge-warmup',
-    'Какая дробь больше: 1/4 или 3/4?', '3/4',
-    'Одинаковый знаменатель → больше та, где больше числитель'));
-  {
-    const total = 8;
-    const eaten = rnd(2, 5);
-    const svg = pizzaSVG(eaten, total);
-    t.push(visualT('🖼️', 'Визуальное', 'badge-visual', svg,
-      `Какая часть пиццы осталась? (в формате N/${total})`,
-      `${total - eaten}/${total}`,
-      [`${total - eaten}/${total}`, `${eaten}/${total}`, `${total - eaten - 1}/${total}`, `${total - eaten + 1}/${total}`],
-      `Было ${total}, съели ${eaten} → осталось ${total - eaten}/${total}`));
+  // Simple x + a = b
+  const x1 = rnd(R.a[0], R.a[1]);
+  const a1 = rnd(R.b[0], R.b[1]);
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    `x + ${a1} = ${x1 + a1}. x = ?`, x1,
+    `x = ${x1 + a1} − ${a1} = ${x1}`));
+
+  // Visual scale
+  const xv = rnd(R.a[0], R.a[1]);
+  const av = rnd(R.b[0], R.b[1]);
+  tasks.push(visualT("🖼️", "Визуальное", "badge-visual",
+    eqScaleSVG(`x + ${av}`, xv + av), "Чему равен x?", xv,
+    makeWrongs(xv, 3), `На весах: x + ${av} = ${xv + av}. x = ${xv}`));
+
+  // Multiply
+  const xm = rnd(R.a[0], R.a[1]);
+  const mul = rnd(R.b[0], R.b[1]);
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+    `${mul} × x = ${mul * xm}. x = ?`, xm,
+    `x = ${mul * xm} ÷ ${mul} = ${xm}`));
+
+  // Input
+  const xi = rnd(R.a[0], R.a[1]);
+  const ai = rnd(R.b[0], R.b[1]);
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `x + ${ai} = ${xi + ai}. x = ?`, xi,
+    `x = ${xi + ai} − ${ai} = ${xi}`));
+
+  // Trap — two step
+  if (diff >= 2) {
+    const xt = rnd(R.a[0], R.a[1]);
+    tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+      `2 × x + 3 = ${2 * xt + 3}. x = ?`, xt,
+      `2x+3=${2 * xt + 3} → 2x=${2 * xt} → x=${xt}`));
   }
-  {
-    const num = rnd(2, 6); const den = num * rnd(2, 4);
-    const reducedNum = 1; const reducedDen = den / num;
-    t.push(choiceT('🎯', 'Выбор', 'badge-choice',
-      `Сократи дробь: ${num}/${den}`,
-      `${reducedNum}/${reducedDen}`,
-      `Делим числитель и знаменатель на ${num} → ${reducedNum}/${reducedDen}`));
+
+  // Boss
+  if (diff >= 2) {
+    const xb = rnd(R.a[0], R.a[1]);
+    const mb = rnd(R.b[0], R.b[1]);
+    tasks.push(inputT("⭐", "Босс", "badge-boss",
+      `${mb} × x − 2 = ${mb * xb - 2}. x = ?`, xb,
+      `Прибавим 2: ${mb}x=${mb * xb} → x=${xb}`));
   }
-  {
-    const pd: { left: string; right: string; answer: string | number }[] = [
-      { left: '1/2 от 10', right: '5', answer: '5' },
-      { left: '1/3 от 9', right: '3', answer: '3' },
-      { left: '1/4 от 8', right: '2', answer: '2' }
-    ];
-    t.push(pairT('🔗', 'Парное', 'badge-pair', 'Соедини дробь от числа с ответом:', pd, 'Находим дробь от числа'));
-  }
-  {
-    const den = rnd(3, 6);
-    const total = den * rnd(3, 7);
-    t.push(inputT('✏️', 'Ввод', 'badge-input',
-      `1/${den} от ${total} = ?`,
-      total / den,
-      `${total} ÷ ${den} = ${total / den}`));
-  }
-  t.push(choiceT('⚠️', 'Ловушка', 'badge-trap',
-    '1/2 + 1/2 = ? (не 2/4!)',
-    '1',
-    '1/2 + 1/2 = 2/2 = 1 целое! Знаменатели НЕ складываем!'));
-  {
-    const den = rnd(2, 5);
-    const num = rnd(1, den - 1);
-    const total = den * rnd(2, 6);
-    t.push(inputT('✏️', 'Ввод', 'badge-input',
-      `${num}/${den} от ${total} = ?`,
-      Math.round(total * num / den),
-      `${total} ÷ ${den} × ${num} = ${Math.round(total * num / den)}`));
-  }
-  {
-    const total = 12;
-    const eaten = rnd(3, 8);
-    t.push(inputT('⭐', 'Босс', 'badge-boss',
-      `Торт на ${total} кусков. Съели ${eaten}. Осталось? (формат N/${total})`,
-      `${total - eaten}/${total}`,
-      `${total} − ${eaten} = ${total - eaten} → ${total - eaten}/${total}`));
-  }
-  return t;
+
+  return shuffleTasks(tasks);
 }
 
-function generateMathLesson(skillId: string): Task[] {
-  const gens: Record<string, () => Task[]> = { add: generateAddLesson, sub: generateSubLesson, mul: generateMulLesson, div: generateDivLesson, eq: generateEqLesson, geom: generateGeomLesson, frac: generateFracLesson };
-  const gen = gens[skillId];
-  return gen ? gen() : generateAddLesson();
+export function generateGeomLesson(diff: DifficultyLevel = 2): Task[] {
+  const R = GEOM_RECT[diff];
+  const tasks: Task[] = [];
+
+  const rect = (): [number, number] => [rnd(R.w[0], R.w[1]), rnd(R.h[0], R.h[1])];
+  const sq = () => rnd(R.w[0], R.w[1]);
+
+  // Square perimeter
+  const s1 = sq();
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    `Квадрат, сторона ${s1}. Периметр?`, 4 * s1,
+    `P = 4 × ${s1} = ${4 * s1}`));
+
+  // Rectangle visual
+  const [vw, vh] = rect();
+  tasks.push(visualT("🖼️", "Визуальное", "badge-visual",
+    geomRectSVG(vw, vh, "Периметр?"), "Периметр?", 2 * (vw + vh),
+    makeWrongs(2 * (vw + vh), 3), `P = 2×(${vw}+${vh}) = ${2 * (vw + vh)}`));
+
+  // Area
+  const [aw, ah] = rect();
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+    `Прямоугольник ${aw}×${ah}. Площадь?`, aw * ah,
+    `S = ${aw} × ${ah} = ${aw * ah}`));
+
+  // Input perimeter
+  const [iw, ih] = rect();
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `Прямоугольник ${iw}×${ih}. Периметр?`, 2 * (iw + ih),
+    `P = 2×(${iw}+${ih}) = ${2 * (iw + ih)}`));
+
+  // Trap — perimeter vs area
+  const ts = sq();
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    `Квадрат, сторона ${ts}. Периметр? (НЕ площадь!)`, 4 * ts,
+    `P = 4 × ${ts} = ${4 * ts}. S = ${ts * ts} — не перепутай!`));
+
+  // Boss
+  if (diff >= 2) {
+    const [bw, bh] = [rnd(R.w[0], R.w[1]), rnd(R.h[0], R.h[1])];
+    tasks.push(inputT("⭐", "Босс", "badge-boss",
+      `Комната ${bw}×${bh} м. Периметр и площадь (через запятую)`,
+      `${2 * (bw + bh)},${bw * bh}` as any,
+      `P=${2 * (bw + bh)}, S=${bw * bh}`));
+  }
+
+  return shuffleTasks(tasks);
 }
 
-export { generateAddLesson, generateSubLesson, generateMulLesson, generateDivLesson, generateEqLesson, generateGeomLesson, generateFracLesson, generateMathLesson };
+export function generateFracLesson(diff: DifficultyLevel = 2): Task[] {
+  const tasks: Task[] = [];
+
+  // Compare fractions
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    "Какая дробь больше: 1/4 или 3/4?", "3/4" as any,
+    "Одинаковый знаменатель → больше та, где больше числитель"));
+
+  // Pizza visual
+  const total = 8;
+  const eaten = rnd(2, 5);
+  tasks.push(visualT("🖼️", "Визуальное", "badge-visual",
+    pizzaSVG(eaten, total), `Какая часть пиццы осталась? (N/${total})`,
+    `${total - eaten}/${total}` as any,
+    [`${total - eaten}/${total}`, `${eaten}/${total}`, `${total - eaten - 1}/${total}`, `${total - eaten + 1}/${total}`] as any,
+    `Было ${total}, съели ${eaten} → осталось ${total - eaten}/${total}`));
+
+  // Simplify
+  if (diff >= 2) {
+    const num = rnd(2, 4);
+    const den = num * rnd(2, 3);
+    tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+      `Сократи: ${num}/${den}`, `${1}/${den / num}` as any,
+      `Делим на ${num} → ${1}/${den / num}`));
+  }
+
+  // Fraction of a number
+  const den = rnd(2, 5);
+  const totalF = den * rnd(2, 6);
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `1/${den} от ${totalF} = ?`, totalF / den,
+    `${totalF} ÷ ${den} = ${totalF / den}`));
+
+  // Trap — 1/2 + 1/2
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    "1/2 + 1/2 = ? (не 2/4!)", "1" as any,
+    "1/2 + 1/2 = 2/2 = 1 целое! Знаменатели НЕ складываем!"));
+
+  // Boss
+  const totalB = rnd(8, 12);
+  const eatenB = rnd(2, totalB - 2);
+  tasks.push(inputT("⭐", "Босс", "badge-boss",
+    `Торт из ${totalB} кусков. Съели ${eatenB}. Осталось? (N/${totalB})`,
+    `${totalB - eatenB}/${totalB}` as any,
+    `${totalB}−${eatenB}=${totalB - eatenB} → ${totalB - eatenB}/${totalB}`));
+
+  return shuffleTasks(tasks);
+}
+
+// ═══ New generators ═══
+
+export function generateCompareLesson(diff: DifficultyLevel = 2): Task[] {
+  const ranges = { 1: { min: 1, max: 20 }, 2: { min: 5, max: 99 }, 3: { min: 10, max: 999 } };
+  const R = ranges[diff];
+  const tasks: Task[] = [];
+
+  const p = (): [number, number] => {
+    const a = rnd(R.min, R.max);
+    const b = rnd(R.min, R.max);
+    return a !== b ? [a, b] : [a, a + 1];
+  };
+
+  const [wa, wb] = p();
+  const sign1 = wa > wb ? ">" : "<";
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    `${wa} ? ${wb} (>, < или =)`, sign1 as any,
+    `${wa} ${sign1} ${wb}`));
+
+  const [ca, cb] = p();
+  const sign2 = ca > cb ? ">" : "<";
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+    `${ca} ? ${cb}`, sign2 as any,
+    `${ca} ${sign2} ${cb}`));
+
+  const [ia, ib] = p();
+  const sign3 = ia > ib ? ">" : "<";
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `${ia} ? ${ib} (>, < или =)`, sign3 as any,
+    `${ia} ${sign3} ${ib}`));
+
+  // Trap — equals
+  const eq = rnd(R.min, R.max);
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    `${eq} ? ${eq} — какой знак?`, "=" as any,
+    "Одинаковые числа — ставим равно!"));
+
+  return shuffleTasks(tasks);
+}
+
+export function generateWordLesson(diff: DifficultyLevel = 2): Task[] {
+  const ranges = {
+    1: { a: [2, 10], b: [1, 5] },
+    2: { a: [5, 30], b: [3, 15] },
+    3: { a: [10, 50], b: [5, 30] },
+  };
+  const R = ranges[diff];
+  const tasks: Task[] = [];
+
+  // Addition word problem
+  const [apples, more] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    `У Маши ${apples} яблок. Петя дал ещё ${more}. Сколько всего?`,
+    apples + more, `${apples} + ${more} = ${apples + more}`));
+
+  // Subtraction
+  const [candy, ate] = [rnd(R.a[0] + R.b[0], R.a[1] + R.b[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `Было ${candy} конфет. Съели ${ate}. Сколько осталось?`,
+    candy - ate, `${candy} − ${ate} = ${candy - ate}`));
+
+  // Compare
+  const [vasya, petya] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  const bigger = Math.max(vasya, petya);
+  const smaller = Math.min(vasya, petya);
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+    `У Васи ${vasya} марок, у Пети ${petya}. У кого больше и на сколько?`,
+    bigger - smaller, `У ${vasya > petya ? "Васи" : "Пети"} на ${Math.abs(vasya - petya)} больше`));
+
+  return shuffleTasks(tasks);
+}
+
+export function generateTimeLesson(diff: DifficultyLevel = 2): Task[] {
+  const tasks: Task[] = [];
+
+  // Hours to minutes
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    "1 час = ? минут", 60, "В одном часе 60 минут"));
+
+  const hrs = rnd(1, 4);
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `${hrs} часа — сколько минут?`, hrs * 60,
+    `${hrs} × 60 = ${hrs * 60} минут`));
+
+  // Half hour
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+    "Полчаса — это сколько минут?", 30,
+    "Половина от 60 минут = 30 минут"));
+
+  // Days in week
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    "Сколько дней в неделе?", 7,
+    "Понедельник, вторник, ..., воскресенье — 7 дней"));
+
+  if (diff >= 2) {
+    tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+      "Сколько месяцев в году? Не путай с неделями!",
+      12, "В году 12 месяцев: январь-декабрь"));
+  }
+
+  return shuffleTasks(tasks);
+}
+
+export function generateUnitsLesson(diff: DifficultyLevel = 2): Task[] {
+  const tasks: Task[] = [];
+
+  // cm to m
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    "1 метр = ? сантиметров", 100, "В 1 метре 100 сантиметров"));
+
+  const m = rnd(2, 5);
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `${m} метра = ? см`, m * 100, `${m} × 100 = ${m * 100} см`));
+
+  // kg to g
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+    "1 килограмм = ? граммов", 1000, "1 кг = 1000 г"));
+
+  if (diff >= 2) {
+    const cm = rnd(120, 300);
+    const meters = Math.floor(cm / 100);
+    const cmRem = cm % 100;
+    tasks.push(inputT("✏️", "Ввод", "badge-input",
+      `${cm} см = ? м ? см (через запятую)`,
+      `${meters},${cmRem}` as any,
+      `${cm} ÷ 100 = ${meters} м ${cmRem} см`));
+  }
+
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    "Сколько сантиметров в 1 дециметре?",
+    10, "1 дм = 10 см. Не путай с метром (100 см)!"));
+
+  return shuffleTasks(tasks);
+}
+
+export function generateMoneyLesson(diff: DifficultyLevel = 2): Task[] {
+  const tasks: Task[] = [];
+
+  // Simple addition
+  const r1 = rnd(2, 8); const r2 = rnd(2, 8);
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    `${r1} руб. + ${r2} руб. = ?`, r1 + r2,
+    `Складываем рубли: ${r1} + ${r2} = ${r1 + r2}`));
+
+  // Buying
+  const [have, item] = [rnd(30, 70), rnd(10, 25)];
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `Было ${have}₽. Купил ручку за ${item}₽. Осталось?`,
+    have - item, `${have} − ${item} = ${have - item}₽`));
+
+  // Multi-item
+  const [a, b] = [rnd(10, 30), rnd(5, 15)];
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+    `Тетрадь ${a}₽, карандаш ${b}₽. Сколько вместе?`,
+    a + b, `${a} + ${b} = ${a + b}₽`));
+
+  if (diff >= 2) {
+    const [have2, item2, item3] = [rnd(50, 100), rnd(10, 30), rnd(10, 20)];
+    const change = have2 - item2 - item3;
+    tasks.push(inputT("✏️", "Ввод", "badge-input",
+      `Было ${have2}₽. Купил за ${item2}₽ и ${item3}₽. Сдача?`,
+      change, `${have2} − ${item2} − ${item3} = ${change}₽`));
+  }
+
+  return shuffleTasks(tasks);
+}
+
+export function generateLogicLesson(diff: DifficultyLevel = 2): Task[] {
+  const tasks: Task[] = [];
+
+  const start = rnd(2, 9);
+  const step = rnd(2, 4);
+  const seq = [start, start + step, start + step * 2];
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    `${seq.join(", ")}, ? — какое число дальше?`,
+    seq[2] + step, `+${step} к каждому: ${seq[2]} + ${step} = ${seq[2] + step}`));
+
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+    "Что лишнее: 2, 4, 7, 8?",
+    "7" as any, "2, 4, 8 — чётные, а 7 — нечётное"));
+
+  if (diff >= 2) {
+    tasks.push(choiceT("✏️", "Ввод", "badge-input",
+      "Продолжи: 1, 4, 9, 16, ?",
+      "25" as any, "Это квадраты: 1²,2²,3²,4²,5²=25"));
+  }
+
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    "У трёх котов 12 лап. Сколько лап у одного кота?",
+    4, "12 ÷ 3 = 4 лапы у каждого кота"));
+
+  return shuffleTasks(tasks);
+}
+
+export function generateSpeedLesson(diff: DifficultyLevel = 2): Task[] {
+  const tasks: Task[] = [];
+
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    "Скорость = расстояние ÷ ?", 0 as any, // rephrased below
+    ""));
+
+  // Simple speed calculation
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    "Что такое скорость? Как её найти?",
+    "расстояние ÷ время" as any,
+    "Скорость = путь ÷ время. Например: 60 км за 2 ч = 30 км/ч"));
+
+  const [dist, time] = [rnd(20, 100), rnd(1, 4)];
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `${dist} км за ${time} ч. Скорость? (км/ч)`,
+    Math.round(dist / time),
+    `${dist} ÷ ${time} = ${Math.round(dist / time)} км/ч`));
+
+  // Distance
+  if (diff >= 2) {
+    const [speed, time2] = [rnd(20, 80), rnd(1, 5)];
+    tasks.push(choiceT("🎯", "Выбор", "badge-choice",
+      `Скорость ${speed} км/ч, время ${time2} ч. Путь?`,
+      speed * time2,
+      `${speed} × ${time2} = ${speed * time2} км`));
+  }
+
+  return shuffleTasks(tasks);
+}
+
+export function generateChartsLesson(diff: DifficultyLevel = 2): Task[] {
+  const tasks: Task[] = [];
+
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
+    "В таблице: яблок — 5, груш — 3, слив — 7. Чего больше?",
+    "слив" as any, "Слив больше всех: 7 > 5 > 3"));
+
+  // Read from table
+  const [mon, tue, wed] = [rnd(4, 15), rnd(4, 15), rnd(4, 15)];
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `Пн: ${mon} книг, Вт: ${tue}, Ср: ${wed}. Сколько всего за 3 дня?`,
+    mon + tue + wed,
+    `${mon} + ${tue} + ${wed} = ${mon + tue + wed}`));
+
+  // Find max
+  if (diff >= 2) {
+    const vals = [rnd(3, 20), rnd(3, 20), rnd(3, 20)];
+    const max = Math.max(...vals);
+    const names = ["котов", "собак", "рыбок"];
+    const maxName = names[vals.indexOf(max)];
+    tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+      `В зоомагазине: котов — ${vals[0]}, собак — ${vals[1]}, рыбок — ${vals[2]}. Кого больше всех?`,
+      maxName as any,
+      `Больше всего ${maxName}: ${max}`));
+  }
+
+  return shuffleTasks(tasks);
+}
+
+// ═══ Registry ═══
+
+export type MathGeneratorId = "add" | "sub" | "mul" | "div" | "eq" | "geom" | "frac"
+  | "compare" | "word" | "time" | "units" | "money" | "logic"
+  | "speed" | "charts";
+
+const MATH_GENS: Record<MathGeneratorId, (diff: DifficultyLevel) => Task[]> = {
+  add: generateAddLesson,
+  sub: generateSubLesson,
+  mul: generateMulLesson,
+  div: generateDivLesson,
+  eq: generateEqLesson,
+  geom: generateGeomLesson,
+  frac: generateFracLesson,
+  compare: generateCompareLesson,
+  word: generateWordLesson,
+  time: generateTimeLesson,
+  units: generateUnitsLesson,
+  money: generateMoneyLesson,
+  logic: generateLogicLesson,
+  speed: generateSpeedLesson,
+  charts: generateChartsLesson,
+};
+
+export function generateMathLesson(generatorId: string, diff: DifficultyLevel = 2): Task[] {
+  const gen = MATH_GENS[generatorId as MathGeneratorId];
+  return gen ? gen(diff) : generateAddLesson(diff);
+}

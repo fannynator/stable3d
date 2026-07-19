@@ -6,6 +6,7 @@ import { PetCollection } from "./PetCollection";
 import { HatShop } from "./HatShop";
 import { PET_DEFS, HATS } from "../../config";
 import { catListen, catSpeak, catStop } from "../../voice";
+import { canUseVoice } from "../../useSubscription";
 
 interface CatRoomProps {
   cat: CatState;
@@ -16,6 +17,7 @@ interface CatRoomProps {
   onUpdateCat: (updates: Partial<CatState>) => void;
   onOpenZone: (zone: string) => void;
   onBuyHat: (hatId: string, price: number) => void;
+  onOpenPaywall?: () => void;
 }
 
 const PET_ACTIONS = [
@@ -25,7 +27,7 @@ const PET_ACTIONS = [
   { label: "Уложить спать", emoji: "😴", effect: "sleep" },
 ];
 
-export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat, onOpenZone, onBuyHat }: CatRoomProps) {
+export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat, onOpenZone, onBuyHat, onOpenPaywall }: CatRoomProps) {
   const [hintsShown, setHintsShown] = useState<Record<string, boolean>>({});
   const [allHintsOff, setAllHintsOff] = useState(false);
   const [speechText, setSpeechText] = useState<string | null>(null);
@@ -99,6 +101,10 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
   }, [cat.hunger, cat.energy, cat.mood, onPet, onUpdateCat, showSpeech]);
 
   const handleMic = useCallback(async () => {
+    if (!canUseVoice()) {
+      onOpenPaywall?.();
+      return;
+    }
     catStop();
     setIsListening(true);
     try {

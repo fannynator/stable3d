@@ -1,51 +1,29 @@
-import type { FGOSCurriculum, FGOSTopic } from "../fgos/fgos-tree";
-import { isSpeedDemon, needsExtraPractice } from "../player/analytics";
-import type { TopicAnalytics } from "../player/analytics";
+import type { PlayerSkillProgress } from "./progression";
 
 /**
- * Adaptive difficulty modes.
+ * Adaptive difficulty — replaces the 3-star system.
+ * Determines task difficulty level (1=easy, 2=medium, 3=hard)
+ * based purely on answer analytics, not manual star ratings.
  */
-export type DifficultyMode = "standard" | "olympiad" | "externat" | "remedial";
+
+export type DifficultyLevel = 1 | 2 | 3;
 
 /**
- * Determine the appropriate difficulty mode for a player on a given topic.
+ * Determine the difficulty level for a skill based on recent performance.
  *
- * - externat: breeze through → skip to next grade's equivalent topic
- * - olympiad: fast + accurate → olympiad-level variant tasks
- * - remedial: struggling → extra practice on same topic
- * - standard: default progression
+ * Level 1 (easy): first few answers OR accuracy < 60%
+ * Level 2 (medium): accuracy 60-85%
+ * Level 3 (hard): accuracy > 85% AND at least 5 answers
  */
-export function getDifficultyMode(
-  analytics: TopicAnalytics | undefined
-): DifficultyMode {
-  if (!analytics) return "standard";
+export function getDifficultyLevel(
+  progress: PlayerSkillProgress | undefined
+): DifficultyLevel {
+  if (!progress || progress.lastResults.length < 3) return 1;
 
-  if (needsExtraPractice(analytics)) return "remedial";
-  if (isSpeedDemon(analytics)) return "olympiad";
+  const recent = progress.lastResults.slice(-5);
+  const acc = recent.filter(Boolean).length / recent.length;
 
-  return "standard";
-}
-
-/**
- * Get the olympiad variant topic for a given topic, if available.
- */
-export function getOlympiadVariant(
-  curriculum: FGOSCurriculum,
-  topicId: string
-): FGOSTopic | undefined {
-  for (const grade of curriculum.grades) {
-    for (const quarter of grade.quarters) {
-      const topic = quarter.topics.find((t) => t.id === topicId);
-      if (topic?.olympiadVariantId) {
-        // Find the olympiad topic in the same curriculum
-        for (const g of curriculum.grades) {
-          for (const q of g.quarters) {
-            const variant = q.topics.find((t) => t.id === topic.olympiadVariantId);
-            if (variant) return variant;
-          }
-        }
-      }
-    }
-  }
-  return undefined;
+  if (acc >= 0.85) return 3;
+  if (acc >= 0.6) return 2;
+  return 1;
 }

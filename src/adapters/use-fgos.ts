@@ -1,92 +1,62 @@
 import { useMemo } from "react";
-import { MATH_CURRICULUM } from "../core/fgos/math-grades";
-import { RUSSIAN_CURRICULUM } from "../core/fgos/russian-grades";
+import { MATH_SKILLS } from "../core/fgos/math-grades";
+import { RUSSIAN_SKILLS } from "../core/fgos/russian-grades";
 import {
-  getUnlockedTopics,
-  getNextTopic,
+  getUnlockedSkills,
   isChapterGated,
-  getObstaclesForGrade,
-  getTopicGrade,
-  getTopicQuarter,
-  flattenTopics,
+  skillsByGrade,
+  getGradeProgress,
 } from "../core/fgos/progression";
-import type { Subject, FGOSTopic } from "../core/fgos/fgos-tree";
+import type { Subject } from "../core/fgos/fgos-tree";
 import type { Skill } from "../app/types";
 
 /**
- * Bridge between FGOS curriculum tree and React UI.
- * Takes legacy Skill[] array and maps to FGOS topics.
+ * Bridge between skill tree and React UI.
  */
 export function useFGOSProgress(
   subject: Subject,
-  completedSkillIds: string[] // legacy skill IDs like "add", "sub", etc.
+  completedSkillIds: string[]
 ) {
-  const curriculum = subject === "math" ? MATH_CURRICULUM : RUSSIAN_CURRICULUM;
+  const allSkills = subject === "math" ? MATH_SKILLS : RUSSIAN_SKILLS;
   const completedIds = new Set(completedSkillIds);
 
-  const allTopics = useMemo(() => flattenTopics(curriculum), [curriculum]);
-
-  const unlockedTopics = useMemo(
-    () => getUnlockedTopics(curriculum, completedIds),
-    [curriculum, completedSkillIds]
-  );
-
-  const nextTopic = useMemo(
-    () => getNextTopic(curriculum, completedIds),
-    [curriculum, completedSkillIds]
+  const unlockedSkills = useMemo(
+    () => getUnlockedSkills(allSkills, completedIds),
+    [subject, completedSkillIds]
   );
 
   const checkChapterGated = (chapterId: string): boolean =>
-    isChapterGated(curriculum, chapterId, completedIds);
-
-  const obstacles = useMemo(
-    () => getObstaclesForGrade(curriculum, completedIds),
-    [curriculum, completedSkillIds]
-  );
-
-  const topicToGrade = (topicId: string) =>
-    getTopicGrade(curriculum, topicId);
-
-  const topicToQuarter = (topicId: string) =>
-    getTopicQuarter(curriculum, topicId);
+    isChapterGated(allSkills, chapterId, completedIds);
 
   /**
-   * Map FGOS topics to existing Skill[] format for backward compatibility with UI.
+   * Map skills to Skill[] format for UI.
    */
   const skillsForUI: Skill[] = useMemo(() => {
-    return allTopics.map((topic): Skill => {
-      const isCompleted = completedIds.has(topic.id);
-      const isUnlocked = isCompleted || unlockedTopics.some((t) => t.id === topic.id);
-      const isCurrent = nextTopic?.id === topic.id;
+    return allSkills.map((sk): Skill => {
+      const isCompleted = completedIds.has(sk.id);
+      const isUnlocked = isCompleted || unlockedSkills.some((u) => u.id === sk.id);
 
       return {
-        id: topic.id,
-        name: topic.name,
-        icon: topic.icon,
-        color: topic.color,
+        id: sk.id,
+        name: sk.name,
+        icon: sk.icon,
+        color: sk.color,
         progress: isCompleted ? 100 : 0,
         status: isCompleted
           ? "completed"
-          : isCurrent
-          ? "current"
           : isUnlocked
           ? "current"
           : "locked",
-        gradient: `linear-gradient(135deg,${topic.color})`,
-        shadow: `0 8px 20px ${topic.color}66`,
+        gradient: `linear-gradient(135deg,${sk.color},${sk.color}dd)`,
+        shadow: `0 8px 20px ${sk.color}66`,
       };
     });
-  }, [allTopics, completedIds, unlockedTopics, nextTopic]);
+  }, [allSkills, completedIds, unlockedSkills]);
 
   return {
-    curriculum,
-    allTopics,
-    unlockedTopics,
-    nextTopic,
-    checkChapterGated,
-    obstacles,
-    topicToGrade,
-    topicToQuarter,
+    allSkills,
+    unlockedSkills,
     skillsForUI,
+    checkChapterGated,
   };
 }

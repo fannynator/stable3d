@@ -3,11 +3,10 @@ import { SkillCard } from "./skills/SkillCard";
 
 interface SkillsScreenProps {
   skills: Skill[];
-  stars: Record<string, number>;
   onSkillClick: (skill: Skill) => void;
 }
 
-export function SkillsScreen({ skills, stars, onSkillClick }: SkillsScreenProps) {
+export function SkillsScreen({ skills, onSkillClick }: SkillsScreenProps) {
   return (
     <div className="flex-1 overflow-y-auto pb-24" style={{ background: "#F0EBFF" }}>
       <div className="flex items-center gap-2 px-4 mb-3 pt-1">
@@ -23,7 +22,7 @@ export function SkillsScreen({ skills, stars, onSkillClick }: SkillsScreenProps)
       ) : (
         <div className="grid grid-cols-2 gap-3 px-4">
           {skills.map((s, i) => (
-            <SkillCard key={s.id} skill={s} stars={stars[s.id] || 0} delay={i * 0.07} onClick={() => onSkillClick(s)} />
+            <SkillCard key={s.id} skill={s} delay={i * 0.07} onClick={() => onSkillClick(s)} />
           ))}
         </div>
       )}

@@ -2,7 +2,7 @@ export type Subject = "math" | "russian";
 export type Tab = "home" | "stories" | "traps" | "games" | "catroom";
 export type SkillStatus = "locked" | "current" | "completed";
 export type CatMood = "happy" | "sleepy" | "hungry" | "playful";
-export type ThemeId = "light" | "dark" | "forest" | "space" | "underwater";
+export type ThemeId = "light" | "dark" | "forest" | "space" | "underwater" | "jungle" | "castle" | "winter" | "candy";
 
 export interface Skill {
   id: string;
@@ -13,6 +13,8 @@ export interface Skill {
   status: SkillStatus;
   gradient: string;
   shadow: string;
+  /** Auto-adaptive difficulty level (1=easy, 2=medium, 3=hard) */
+  difficulty?: number;
 }
 
 export interface Task {

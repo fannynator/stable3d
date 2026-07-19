@@ -114,6 +114,34 @@ export const THEMES: Record<ThemeId, Theme> = {
     gradient: "linear-gradient(135deg, #BAE6FD 0%, #E0F2FE 50%, #7DD3FC 100%)",
     bgEffect: "bubbles", unlocked: false, unlockAt: 12,
   },
+  jungle: {
+    id: "jungle", name: "🌴 Джунгли", catEmoji: "🐯",
+    bg: "#F0FDF4", card: "#FFFFFF", text: "#166534", textLight: "#4D7C0F",
+    primary: "#16A34A", accent: "#A3E635",
+    gradient: "linear-gradient(135deg, #DCFCE7 0%, #ECFCCB 50%, #A7F3D0 100%)",
+    bgEffect: "vines", unlocked: false, unlockAt: 5,
+  },
+  castle: {
+    id: "castle", name: "🏰 Замок", catEmoji: "🐲",
+    bg: "#FEF3C7", card: "#FFFFFF", text: "#78350F", textLight: "#92400E",
+    primary: "#B45309", accent: "#FCD34D",
+    gradient: "linear-gradient(135deg, #FEF3C7 0%, #FDE68A 50%, #FCD34D 100%)",
+    bgEffect: "bricks", unlocked: false, unlockAt: 9,
+  },
+  winter: {
+    id: "winter", name: "❄️ Зима", catEmoji: "🐧",
+    bg: "#F0F9FF", card: "#FFFFFF", text: "#0F172A", textLight: "#334155",
+    primary: "#0EA5E9", accent: "#E0F2FE",
+    gradient: "linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 50%, #BAE6FD 100%)",
+    bgEffect: "snow", unlocked: false, unlockAt: 15,
+  },
+  candy: {
+    id: "candy", name: "🍬 Конфеты", catEmoji: "🍩",
+    bg: "#FDF2F8", card: "#FFFFFF", text: "#831843", textLight: "#BE185D",
+    primary: "#EC4899", accent: "#F472B6",
+    gradient: "linear-gradient(135deg, #FCE7F3 0%, #FDF2F8 50%, #FBCFE8 100%)",
+    bgEffect: "candy", unlocked: false, unlockAt: 18,
+  },
 };
 
 export const CAT_ROOM_PHRASES: Record<string, string[]> = {

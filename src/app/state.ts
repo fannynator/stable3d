@@ -238,16 +238,27 @@ export function useGameState() {
   const updateSkillProgress = useCallback((skillId: string, ratio: number) => {
     setState(prev => {
       const skills = [...prev.skills[prev.subject]];
-      const idx = skills.findIndex(s => s.id === skillId);
-      if (idx < 0) return prev;
+      let idx = skills.findIndex(s => s.id === skillId);
+
+      // If skill not in legacy list (new FGOS skill tree), add it dynamically
+      if (idx < 0) {
+        skills.push({
+          id: skillId,
+          name: skillId,
+          icon: "📚",
+          color: "#7C3AED",
+          progress: 0,
+          status: "current",
+          gradient: "linear-gradient(135deg,#7C3AED,#5B21B6)",
+          shadow: "0 8px 20px rgba(124,58,237,0.4)",
+        });
+        idx = skills.length - 1;
+      }
+
       const skill = { ...skills[idx] };
       skill.progress = Math.min(SKILL.PROGRESS_TO_COMPLETE, skill.progress + Math.round(ratio * 100));
       if (skill.progress >= SKILL.PROGRESS_TO_COMPLETE) {
         skill.status = "completed";
-        // Unlock next skill
-        if (idx + 1 < skills.length && skills[idx + 1].status === "locked") {
-          skills[idx + 1] = { ...skills[idx + 1], status: "current" };
-        }
       }
       skills[idx] = skill;
 
