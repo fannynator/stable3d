@@ -78,21 +78,50 @@ async function initEngines(): Promise<void> {
   }
 }
 
+// Strip all emoji and special symbols before TTS — tokenizers choke on them.
+// Covers BMP (U+2000–U+27FF), supplemental planes (U+1F000–U+1FAFF, U+E0000+),
+// plus flags, ZWJ sequences, and variation selectors.
+const RE_EMOJI =
+  /[\u{200D}\u{20E3}\u{FE00}-\u{FE0F}\u{2000}-\u{206F}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2900}-\u{297F}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{1F000}-\u{1FAFF}\u{E0000}-\u{E007F}]/gu;
+
+function stripEmoji(text: string): string {
+  return text.replace(RE_EMOJI, "").replace(/\s{2,}/g, " ").trim();
+}
+
+// Piper TTS (Russian voice) reads math symbols in English context.
+// Convert them to spoken Russian words before sending to TTS.
+function normalizeForSpeech(text: string): string {
+  return text
+    .replace(/−/g, " минус ")       // U+2212 MINUS SIGN
+    .replace(/–/g, " минус ")       // en-dash (some inputs use this)
+    .replace(/—/g, " минус ")       // em-dash
+    .replace(/\b-\b/g, " минус ")   // ASCII hyphen between word boundaries
+    .replace(/\+/g, " плюс ")
+    .replace(/×/g, " умножить на ")
+    .replace(/÷/g, " разделить на ")
+    .replace(/=/g, " равно ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 /**
- * Speak text via Kokoro-82M. Falls back to Web Speech on error.
+ * Speak text via Piper TTS. Falls back to Web Speech on error.
  */
 export async function catSpeak(text: string): Promise<void> {
   if (!initialized) await initEngines();
 
+  const clean = normalizeForSpeech(stripEmoji(text));
+  if (!clean) return;
+
   if (currentTTSEngine) {
     try {
-      await currentTTSEngine.speak(text);
+      await currentTTSEngine.speak(clean);
     } catch (err) {
       console.warn("[CatVoice] TTS failed, fallback:", err);
-      await webSpeak(text);
+      await webSpeak(clean);
     }
   } else {
-    await webSpeak(text);
+    await webSpeak(clean);
   }
 }
 
@@ -104,8 +133,10 @@ export function catStop(): void {
 
 export async function catPrefetch(id: string, text: string): Promise<void> {
   if (!initialized) await initEngines();
+  const clean = normalizeForSpeech(stripEmoji(text));
+  if (!clean) return;
   const { prefetchAudio } = await import("./engines/engine-kokoro");
-  await prefetchAudio(id, text);
+  await prefetchAudio(id, clean);
 }
 
 export async function catSpeakCached(id: string, fallbackText: string): Promise<void> {
@@ -115,7 +146,7 @@ export async function catSpeakCached(id: string, fallbackText: string): Promise<
   const played = await playCached(id);
   if (played) return;
 
-  await catSpeak(fallbackText);
+  await catSpeak(fallbackText); // stripEmoji happens inside catSpeak
 }
 
 export function catClearCache(): void {
