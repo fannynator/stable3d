@@ -153,8 +153,9 @@ export function useGameState() {
   }, [state.skills]);
 
   const getAvailableTraps = useCallback((): Trap[] => {
-    return state.traps.filter(
-      t => t.defuses < TRAP.MAX_DEFUSES && t.subject === state.subject
+    const now = Date.now();
+    return state.traps.filter(t =>
+      t.defuses < TRAP.MAX_DEFUSES && t.subject === state.subject && new Date(t.nextDate).getTime() <= now
     );
   }, [state.traps, state.subject]);
 
@@ -180,9 +181,7 @@ export function useGameState() {
   }, []);
 
   const checkAchievements = useCallback(() => {
-    const done = (state.storiesCompleted.math ? 1 : 0) +
-      (state.storiesCompleted.rus1 ? 1 : 0) +
-      (state.storiesCompleted.rus2 ? 1 : 0);
+    const done = Object.values(state.storiesCompleted).filter(Boolean).length;
     const def = state.traps.reduce((s, t) => s + t.defuses, 0);
 
     const checks: Record<string, boolean> = {
@@ -300,9 +299,13 @@ export function useGameState() {
 
   const defuseTrap = useCallback((trapId: string) => {
     setState(prev => {
-      const traps = prev.traps.map(t =>
-        t.id === trapId ? { ...t, defuses: t.defuses + 1 } : t
-      );
+      const traps = prev.traps.map(t => {
+        if (t.id !== trapId) return t;
+        const nextDefuses = t.defuses + 1;
+        const delayDays = TRAP.DELAY_SLOTS[Math.min(nextDefuses, TRAP.DELAY_SLOTS.length - 1)];
+        const nextDate = new Date(Date.now() + delayDays * 86400000).toISOString();
+        return { ...t, defuses: nextDefuses, nextDate };
+      });
       return { ...prev, traps };
     });
   }, []);

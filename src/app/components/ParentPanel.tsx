@@ -2,6 +2,15 @@ import { useState, useMemo, useCallback } from "react";
 import type { Subject } from "../../types";
 
 const PIN_KEY = "kot_ucheniy_parent_pin";
+
+// Simple hash to avoid plaintext PIN in localStorage
+function hashPin(pin: string): string {
+  let h = pin.length * 31;
+  for (let i = 0; i < pin.length; i++) {
+    h = (h * 7 + pin.charCodeAt(i)) ^ (h >>> 3);
+  }
+  return "p_" + (h >>> 0).toString(36);
+}
 const LIMIT_KEY = "kot_ucheniy_daily_limit";
 const STATS_KEY = "kot_ucheniy_stats";
 const STATS_HISTORY_KEY = "kot_ucheniy_stats_history";
@@ -114,7 +123,8 @@ export function ParentPanel({ totalStars, totalGems, currentSubject, onResetProg
 
   const checkPin = useCallback((entered: string) => {
     if (entered.length < 4) return;
-    if (entered === savedPin || (savedPin === null && entered === "0000")) {
+    const enteredHash = hashPin(entered);
+    if (enteredHash === savedPin || (savedPin === null && entered === "0000")) {
       setAuthenticated(true);
       setPin("");
     } else {
@@ -129,7 +139,7 @@ export function ParentPanel({ totalStars, totalGems, currentSubject, onResetProg
       setSetupConfirm("");
       return;
     }
-    localStorage.setItem(PIN_KEY, setupPin);
+    localStorage.setItem(PIN_KEY, hashPin(setupPin));
     setSettingPin(false);
     setAuthenticated(true);
   }, [setupPin, setupConfirm]);

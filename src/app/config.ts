@@ -18,7 +18,7 @@ export const GEMS = {
   STORY_RUS_REWARD: 50,
 };
 
-export const TRAP = { MAX_DEFUSES: 1, DELAY_SLOTS: [1, 3, 7, 14] };
+export const TRAP = { MAX_DEFUSES: 4, DELAY_SLOTS: [0, 1, 3, 7, 14] };
 export const SKILL = { PROGRESS_TO_COMPLETE: 100 };
 
 export const DEFAULT_CAT: CatState = {

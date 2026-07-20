@@ -120,8 +120,8 @@ export function generateAlphabetLesson(diff: DifficultyLevel = 2): T[] {
     shuffle([vAns, letters[rnd(0, letters.length - 1)], letters[rnd(0, letters.length - 1)]]),
     `В слове «${word}» на этом месте буква «${vAns}»`));
 
-  // Choice
-  const l2 = letters[rnd(0, letters.length - 1)];
+  // Choice — letter after (exclude last letter to avoid wrap-around)
+  const l2 = letters[rnd(0, letters.length - 2)]; // never pick the last letter
   tasks.push(choiceStrT("🎯", "Выбор", "badge-choice",
     `Буква после «${l2}» в алфавите?`,
     letters[(letters.indexOf(l2) + 1) % letters.length],
