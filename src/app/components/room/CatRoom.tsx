@@ -7,6 +7,7 @@ import { HatShop } from "./HatShop";
 import { PET_DEFS, HATS } from "../../config";
 import { catListen, catSpeak, catStop } from "../../voice";
 import { canUseVoice } from "../../useSubscription";
+import { playMeowSound } from "../../sounds";
 
 interface CatRoomProps {
   cat: CatState;
@@ -66,6 +67,7 @@ export function CatRoom({ cat, totalPets, ownedPetIds, gems, onPet, onUpdateCat,
     }
     setShowActions(true);
     onPet();
+    playMeowSound();
     spawnHeart(50 + Math.random() * 30, 30 + Math.random() * 20);
   }, [showActions, onPet, spawnHeart]);
 

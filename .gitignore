@@ -18,5 +18,5 @@ android/local.properties
 .idea/
 *.iws
 *.ipr
-# OS
-Thumbs.db
+# Dream scripts
+_dream_*

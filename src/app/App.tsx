@@ -22,6 +22,7 @@ import { FGOSDoodleGame } from "./components/games/FGOSDoodleGame";
 import { HillClimbCat } from "./components/games/HillClimbCat";
 import { generateMathLesson } from "../generators/math";
 import { generateRusLesson } from "../generators/russian";
+import { playCorrectSound, playWrongSound, playAchievementSound } from "./sounds";
 import { TaskModal } from "./components/TaskModal";
 import { PrivacyModal, hasAcceptedPrivacy } from "./components/PrivacyModal";
 import { ParentPanel, recordTaskSolved, recordPlayTime, isTimeExceeded, getDailyTimeLimitMs } from "./components/ParentPanel";
@@ -225,6 +226,10 @@ export default function App() {
 
     recordTaskSolved(state.subject, isCorrect);
 
+    // Audio feedback
+    if (isCorrect) playCorrectSound();
+    else playWrongSound();
+
     // If session is not over, advance to next task
     if (nextIndex < session.tasks.length) {
       setSession({
@@ -247,7 +252,8 @@ export default function App() {
       unlockAchievement("student");
       if (nextCorrect === 5) unlockAchievement("master");
     }
-    checkAchievements();
+    const unlocked = checkAchievements();
+    if (unlocked.length > 0) playAchievementSound();
 
     // Keep session visible for summary phase, mark as finished
     setSession({
