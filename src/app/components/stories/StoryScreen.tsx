@@ -43,6 +43,76 @@ const STORY_SRC: Record<string, { id: string; title: string; subj: string; scene
       { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Все буквы на месте! 🎉" },
     ],
   },
+  math2: {
+    id: "math2", title: "🧮 Дело о ловушке времени", subj: "math", scenes: [
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Мур! В доме перепуталось время! Часы сломаны!" },
+      { type: "choice", speaker: "Часовщик", emoji: "⏰", text: "3 часа = ? минут", question: "Сколько минут?", options: ["60", "120", "180", "300"], correctAns: "180", explanation: "3 × 60 = 180 минут! ⏱️" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Отлично! А как насчёт недель?" },
+      { type: "input", speaker: "Календарь", emoji: "📅", text: "В неделе 7 дней. 3 недели — ?", question: "Дней?", correctAns: "21", explanation: "3 × 7 = 21 день! 📆" },
+      { type: "choice", speaker: "Будильник", emoji: "⏲️", text: "Полчаса — ? минут", question: "Минут?", options: ["15", "30", "45", "60"], correctAns: "30", explanation: "60 ÷ 2 = 30 минут! ⏰" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Время снова тикает правильно! 🎉" },
+    ],
+  },
+  math3: {
+    id: "math3", title: "🧮 Дело о пиратском сундуке", subj: "math", scenes: [
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Пираты спрятали сокровище! Надо разделить поровну!" },
+      { type: "choice", speaker: "Капитан", emoji: "🏴‍☠️", text: "56 монет на 7 пиратов.", question: "Каждому?", options: ["6", "7", "8", "9"], correctAns: "8", explanation: "56 ÷ 7 = 8 монет! 💰" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "А останется?" },
+      { type: "input", speaker: "Боцман", emoji: "⚓", text: "43 кокоса на 5 пиратов. Каждому?", question: "Каждому?", correctAns: "8", explanation: "43 ÷ 5 = 8 (ост. 3) 🥥" },
+      { type: "choice", speaker: "Кок", emoji: "🍪", text: "99 печений на 9 матросов.", question: "Каждому?", options: ["9", "10", "11", "12"], correctAns: "11", explanation: "99 ÷ 9 = 11 печений! 🍪" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Сундук открыт! Все довольны! 🎉🏆" },
+    ],
+  },
+  math4: {
+    id: "math4", title: "🧮 Дело о волшебном саду", subj: "math", scenes: [
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "В саду всё растёт по волшебной формуле! Периметр и площадь!" },
+      { type: "choice", speaker: "Садовник", emoji: "🌱", text: "Грядка 6×4 м. Периметр?", question: "Периметр?", options: ["20", "24", "28", "10"], correctAns: "20", explanation: "P = 2×(6+4) = 20 м! 🌿" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "А площадь?" },
+      { type: "input", speaker: "Фермер", emoji: "🌾", text: "Поле 8×7 м. Площадь?", question: "Площадь?", correctAns: "56", explanation: "S = 8 × 7 = 56 м²! 🌻" },
+      { type: "choice", speaker: "Архитектор", emoji: "🏗️", text: "Квадрат, сторона 9. Периметр?", question: "Периметр?", options: ["18", "27", "36", "81"], correctAns: "36", explanation: "P = 4 × 9 = 36! Не путай с площадью! 🏠" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Сад в полном порядке! Урожай собран! 🎉🌺" },
+    ],
+  },
+  math5: {
+    id: "math5", title: "🧮 Дело о космических дробях", subj: "math", scenes: [
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Инопланетяне украли пиццу! Оставили только дроби!" },
+      { type: "choice", speaker: "Шеф-повар", emoji: "🍕", text: "Какая больше: 1/3 или 2/3?", question: "Больше?", options: ["1/3", "2/3", "Одинаково", "Не знаю"], correctAns: "2/3", explanation: "2 из 3 > 1 из 3! 🍕" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Надо сократить дроби!" },
+      { type: "input", speaker: "Математик", emoji: "📐", text: "Сократи: 2/4", question: "2/4 = ?", correctAns: "1/2", explanation: "Делим на 2: 2/4 = 1/2! ✂️" },
+      { type: "choice", speaker: "Астронавт", emoji: "🚀", text: "1/2 + 1/2 = ?", question: "Сумма?", options: ["2/4", "1", "2/2", "1/4"], correctAns: "1", explanation: "1/2 + 1/2 = 1 целое! 🌍" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Пицца возвращена на Землю! 🎉🌍" },
+    ],
+  },
+  rus3: {
+    id: "rus3", title: "📝 Дело о смешных синонимах", subj: "russian", scenes: [
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Слова потеряли свои значения! Кто огромный, а кто просто большой?" },
+      { type: "choice", speaker: "Словарь", emoji: "📖", text: "Синоним: «весёлый» — ?", question: "Синоним?", options: ["Грустный", "Радостный", "Злой", "Странный"], correctAns: "Радостный", explanation: "Весёлый ≈ радостный! 😄" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "А антонимы?" },
+      { type: "choice", speaker: "Антоним", emoji: "🔄", text: "Антоним: «быстрый» — ?", question: "Антоним?", options: ["Скорый", "Медленный", "Ловкий", "Шустрый"], correctAns: "Медленный", explanation: "Быстрый ↔ медленный! 🐢" },
+      { type: "input", speaker: "Филолог", emoji: "📚", text: "Синоним к «храбрый»", question: "Храбрый = ?", correctAns: "смелый", explanation: "Храбрый = смелый! 🦁" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Все слова вернулись на место! 🎉" },
+    ],
+  },
+  rus4: {
+    id: "rus4", title: "📝 Дело о спрятанных глаголах", subj: "russian", scenes: [
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Глаголы разбежались по времени! Настоящее, прошедшее, будущее!" },
+      { type: "choice", speaker: "Хронолог", emoji: "⌛", text: "«Читал» — какое время?", question: "Время?", options: ["Настоящее", "Прошедшее", "Будущее", "Вечное"], correctAns: "Прошедшее", explanation: "Суффикс -Л- → прошедшее! ⏮️" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "А кто как спрягается?" },
+      { type: "input", speaker: "Грамматик", emoji: "✍️", text: "Я (что делаю?) чита...", question: "Окончание?", correctAns: "ю", explanation: "Я читаЮ (1 лицо)! 📖" },
+      { type: "choice", speaker: "Учитель", emoji: "👨‍🏫", text: "Он (что делает?) дума...", question: "Окончание?", options: ["ет", "ит", "ат", "ют"], correctAns: "ет", explanation: "Он думаЕТ (3 лицо)! 💭" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Глаголы нашли свои времена! 🎉" },
+    ],
+  },
+  rus5: {
+    id: "rus5", title: "📝 Дело о великом диктанте", subj: "russian", scenes: [
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Сегодня великий диктант! Проверим все правила!" },
+      { type: "choice", speaker: "Орфограф", emoji: "📝", text: '"Пр...бывать" (приближаться)', question: "ПРЕ или ПРИ?", options: ["ПРЕ", "ПРИ"], correctAns: "ПРИ", explanation: "ПРИбывать = приближаться! 🚂" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Отлично! А теперь Н или НН?" },
+      { type: "choice", speaker: "Суффикс", emoji: "📋", text: '"Кури...ый суп"', question: "Н или НН?", options: ["Н", "НН"], correctAns: "Н", explanation: "-ИН- → одна Н! 🍲" },
+      { type: "input", speaker: "Диктатор", emoji: "🎤", text: 'Он (что делает?) смеёт...', question: "Окончание?", correctAns: "тся", explanation: "Что делает? → ТСЯ! 🎯" },
+      { type: "dialogue", speaker: "Кот", emoji: "🐱", text: "Диктант сдан на отлично! 🎉🏆" },
+    ],
+  },
 };
 
 interface StoryScreenProps {

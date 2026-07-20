@@ -91,7 +91,7 @@ export interface GameState {
   streak: number;
   gems: number;
   totalPets: number;
-  storiesCompleted: { math: boolean; rus1: boolean; rus2: boolean };
+  storiesCompleted: { math: boolean; math2: boolean; math3: boolean; math4: boolean; math5: boolean; rus1: boolean; rus2: boolean; rus3: boolean; rus4: boolean; rus5: boolean };
   traps: Trap[];
   achievements: Record<string, Achievement>;
   skills: {

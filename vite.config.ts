@@ -53,6 +53,9 @@ export default defineConfig({
   },
   server: {
     clearScreen: false,
+    watch: {
+      ignored: ['**/dist/**'],
+    },
   },
   build: {
     target: 'esnext',

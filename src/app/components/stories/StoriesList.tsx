@@ -32,6 +32,48 @@ const STORIES_DATA: Omit<Story, "completed" | "locked">[] = [
     emoji: "😺", gradient: "linear-gradient(135deg,#818CF8,#4F46E5)", shadow: "0 8px 20px rgba(129,140,248,0.4)",
     subj: "russian",
   },
+  {
+    id: "math2", title: "🧮 Дело о ловушке времени", hero: "🐧",
+    tagline: "Часы сломаны! Коту нужна помощь с временем и календарём.",
+    emoji: "🐱", gradient: "linear-gradient(135deg,#06B6D4,#0891B2)", shadow: "0 8px 20px rgba(6,182,212,0.4)",
+    subj: "math",
+  },
+  {
+    id: "rus3", title: "📝 Дело о смешных синонимах", hero: "🦊",
+    tagline: "Слова потеряли значения! Кто поможет их найти?",
+    emoji: "😺", gradient: "linear-gradient(135deg,#F97316,#EA580C)", shadow: "0 8px 20px rgba(249,115,22,0.4)",
+    subj: "russian",
+  },
+  {
+    id: "math3", title: "🧮 Дело о пиратском сундуке", hero: "🐻",
+    tagline: "Пираты спрятали сокровище! Надо разделить добычу.",
+    emoji: "🐱", gradient: "linear-gradient(135deg,#F59E0B,#D97706)", shadow: "0 8px 20px rgba(245,158,11,0.4)",
+    subj: "math",
+  },
+  {
+    id: "rus4", title: "📝 Дело о спрятанных глаголах", hero: "🦉",
+    tagline: "Глаголы разбежались по времени! Надо их найти.",
+    emoji: "😺", gradient: "linear-gradient(135deg,#7C3AED,#5B21B6)", shadow: "0 8px 20px rgba(124,58,237,0.4)",
+    subj: "russian",
+  },
+  {
+    id: "math4", title: "🧮 Дело о волшебном саду", hero: "🐧",
+    tagline: "В саду всё растёт по формулам! Периметр и площадь.",
+    emoji: "🐱", gradient: "linear-gradient(135deg,#10B981,#059669)", shadow: "0 8px 20px rgba(16,185,129,0.4)",
+    subj: "math",
+  },
+  {
+    id: "rus5", title: "📝 Дело о великом диктанте", hero: "🦊",
+    tagline: "Великий диктант! Все правила русского языка в деле.",
+    emoji: "😺", gradient: "linear-gradient(135deg,#EC4899,#DB2777)", shadow: "0 8px 20px rgba(236,72,153,0.4)",
+    subj: "russian",
+  },
+  {
+    id: "math5", title: "🧮 Дело о космических дробях", hero: "🐻",
+    tagline: "Инопланетяне украли пиццу! Верни её с помощью дробей!",
+    emoji: "🐱", gradient: "linear-gradient(135deg,#0EA5E9,#0284C7)", shadow: "0 8px 20px rgba(14,165,233,0.4)",
+    subj: "math",
+  },
 ];
 
 interface StoriesListProps {
@@ -81,12 +123,6 @@ export function StoriesList({ completed, onStoryClick }: StoriesListProps) {
             </div>
           </div>
         ))}
-      </div>
-      <div className="mt-4 rounded-3xl p-5 text-center mb-2"
-        style={{ background: "linear-gradient(135deg,#EDE9FE,#DDD6FE)", boxShadow: "0 4px 16px rgba(124,58,237,0.18)", animation: "fadeSlideUp 0.45s 0.44s ease-out both" }}>
-        <div className="text-4xl mb-2">🚀</div>
-        <p className="font-black text-purple-800 text-sm">Больше историй скоро!</p>
-        <p className="text-purple-500 text-xs font-bold mt-1">Продолжай учиться, чтобы открыть их</p>
       </div>
     </div>
   );

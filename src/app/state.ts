@@ -18,7 +18,7 @@ function createDefaultState(): GameState {
     streak: 0,
     gems: 0,
     totalPets: 0,
-    storiesCompleted: { math: false, rus1: false, rus2: false },
+    storiesCompleted: { math: false, math2: false, math3: false, math4: false, math5: false, rus1: false, rus2: false, rus3: false, rus4: false, rus5: false },
     traps: [],
     achievements: deepClone(ACHIEVEMENTS_DEF),
     skills: {
