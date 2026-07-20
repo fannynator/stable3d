@@ -34,6 +34,7 @@ export function getSubscriptionStatus(): SubscriptionStatus {
 
 export function startTrial(): void {
   localStorage.setItem(TRIAL_START_KEY, new Date().toISOString());
+  localStorage.setItem(SUB_ACTIVE_KEY, "true");
 }
 
 export async function activateSubscription(): Promise<void> {

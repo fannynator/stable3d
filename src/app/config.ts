@@ -133,14 +133,14 @@ export const THEMES: Record<ThemeId, Theme> = {
     bg: "#F0F9FF", card: "#FFFFFF", text: "#0F172A", textLight: "#334155",
     primary: "#0EA5E9", accent: "#E0F2FE",
     gradient: "linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 50%, #BAE6FD 100%)",
-    bgEffect: "snow", unlocked: false, unlockAt: 15,
+    bgEffect: "snow", unlocked: false, unlockAt: 12,
   },
   candy: {
     id: "candy", name: "🍬 Конфеты", catEmoji: "🍩",
     bg: "#FDF2F8", card: "#FFFFFF", text: "#831843", textLight: "#BE185D",
     primary: "#EC4899", accent: "#F472B6",
     gradient: "linear-gradient(135deg, #FCE7F3 0%, #FDF2F8 50%, #FBCFE8 100%)",
-    bgEffect: "candy", unlocked: false, unlockAt: 18,
+    bgEffect: "candy", unlocked: false, unlockAt: 14,
   },
 };
 

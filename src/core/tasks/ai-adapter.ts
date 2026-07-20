@@ -203,6 +203,7 @@ const MATH_GENS: Record<string, (d: number) => AIStructuredTask> = {
   eq: genEq, geom: genGeom, frac: genFrac,
   compare: genAdd, word: genAdd, time: genAdd, units: genAdd, money: genAdd, logic: genAdd,
   speed: genAdd, charts: genAdd,
+  column_add: genAdd, column_mul: genMul, column_div: genDiv,
 };
 
 // ── Dynamic Russian generators ──

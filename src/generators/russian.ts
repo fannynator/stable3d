@@ -296,7 +296,7 @@ export function generateHardSignLesson(diff: DifficultyLevel = 2): T[] {
     { word: "об_явление", ans: "ъ", hint: "Ъ после приставки", wrong: "ь" },
     { word: "раз_ярённый", ans: "ъ", hint: "Ъ после приставки", wrong: "ь" },
     { word: "в_езд", ans: "ъ", hint: "Ъ после приставки", wrong: "ь" },
-    { word: "из_ян", ans: "ъ", hint: "Исключение! Ъ в корне", wrong: "ь" },
+    { word: "из_ян", ans: "ъ", hint: "Исключение! Ъ после приставки ИЗ-", wrong: "ь" },
     { word: "об_яснить", ans: "ъ", hint: "Ъ после приставки", wrong: "ь" },
   ];
   const sel = shuffle(fullDict).slice(0, 7);
@@ -479,7 +479,7 @@ export function generateSilentLesson(diff: DifficultyLevel = 2): T[] {
     { word: "грус_ный", ans: "т", check: "грусть" },
     { word: "радос_ный", ans: "т", check: "радость" },
     { word: "звёз_ный", ans: "д", check: "звезда" },
-    { word: "праз_ник", ans: "д", check: "празден" },
+    { word: "праз_ник", ans: "д", check: "праздный" },
     { word: "чу_ство", ans: "в", check: "чуВствую" },
     { word: "лес_ница", ans: "т", check: "лестница (словарное)" },
     { word: "со_нце", ans: "л", check: "солнышко" },

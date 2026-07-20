@@ -9,7 +9,7 @@ interface TaskModalProps {
   correctCount: number;
   wrongCount: number;
   topicId: string;
-  stars: number;
+  difficulty: number;
   onAnswer: (correct: boolean) => void;
   onClose: () => void;
 }
@@ -24,7 +24,7 @@ const OPTION_COLORS = [
   "from-[#8B5CF6] to-[#6D28D9]",
 ];
 
-export function TaskModal({ tasks, currentIndex, source, correctCount, wrongCount, topicId, stars, onAnswer, onClose }: TaskModalProps) {
+export function TaskModal({ tasks, currentIndex, source, correctCount, wrongCount, topicId, difficulty, onAnswer, onClose }: TaskModalProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("question");
   const [isClosing, setIsClosing] = useState(false);

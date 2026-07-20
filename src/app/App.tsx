@@ -327,10 +327,19 @@ export default function App() {
   const dailyStreakUpdate = useCallback(() => {
     const today = new Date().toDateString();
     const lastVisit = localStorage.getItem("kot_ucheniy_last_visit");
-    if (!lastVisit) { localStorage.setItem("kot_ucheniy_last_visit", today); return; }
+    if (!lastVisit) {
+      localStorage.setItem("kot_ucheniy_last_visit", today);
+      setState(prev => ({ ...prev, streak: 1 }));
+      return;
+    }
     if (lastVisit === today) return;
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
     localStorage.setItem("kot_ucheniy_last_visit", today);
-  }, []);
+    setState(prev => ({
+      ...prev,
+      streak: lastVisit === yesterday ? prev.streak + 1 : 1,
+    }));
+  }, [setState]);
 
   useEffect(() => {
     dailyStreakUpdate();
@@ -534,7 +543,7 @@ export default function App() {
         {/* Parent Panel */}
         {parentOpen && (
           <ParentPanel
-            totalStars={totalStars}
+            totalStars={totalCompleted}
             totalGems={state.gems}
             currentSubject={state.subject}
             onResetProgress={resetAllProgress}

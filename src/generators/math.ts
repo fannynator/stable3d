@@ -20,8 +20,9 @@ function makeWrongs(correct: number, count = 3): number[] {
   // Ensure wrong answers are positive and at least somewhat different
   const spread = Math.max(1, Math.ceil(correct * 0.15));
   const wrongs = new Set<number>();
-  const attempts = 0;
-  while (wrongs.size < count) {
+  let attempts = 0;
+  while (wrongs.size < count && attempts < 100) {
+    attempts++;
     const delta = rnd(-spread * 2, spread * 2);
     const candidate = correct + delta;
     if (candidate !== correct && candidate > 0 && !wrongs.has(candidate)) {
@@ -774,11 +775,6 @@ export function generateSpeedLesson(diff: DifficultyLevel = 2): Task[] {
   const tasks: Task[] = [];
 
   tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
-    "Скорость = расстояние ÷ ?", 0 as any, // rephrased below
-    ""));
-
-  // Simple speed calculation
-  tasks.push(choiceT("🔥", "Разминка", "badge-warmup",
     "Что такое скорость? Как её найти?",
     "расстояние ÷ время" as any,
     "Скорость = путь ÷ время. Например: 60 км за 2 ч = 30 км/ч"));
@@ -789,13 +785,25 @@ export function generateSpeedLesson(diff: DifficultyLevel = 2): Task[] {
     Math.round(dist / time),
     `${dist} ÷ ${time} = ${Math.round(dist / time)} км/ч`));
 
-  // Distance
   if (diff >= 2) {
     const [speed, time2] = [rnd(20, 80), rnd(1, 5)];
     tasks.push(choiceT("🎯", "Выбор", "badge-choice",
       `Скорость ${speed} км/ч, время ${time2} ч. Путь?`,
       speed * time2,
       `${speed} × ${time2} = ${speed * time2} км`));
+  }
+
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    "Скорость = расстояние ÷ время или время ÷ расстояние?",
+    "расстояние ÷ время" as any,
+    "Не перепутай! Скорость = путь ÷ время"));
+
+  if (diff >= 2) {
+    const [d2, t2] = [rnd(30, 120), rnd(2, 5)];
+    tasks.push(inputT("⭐", "Босс", "badge-boss",
+      `Поехал кот на ${d2} км за ${t2} ч. Скорость?`,
+      Math.round(d2 / t2),
+      `${d2} ÷ ${t2} = ${Math.round(d2 / t2)} км/ч`));
   }
 
   return shuffleTasks(tasks);
@@ -830,11 +838,135 @@ export function generateChartsLesson(diff: DifficultyLevel = 2): Task[] {
   return shuffleTasks(tasks);
 }
 
+// ═══ 4th grade multi-digit generators ═══
+
+export function generateColumnAddLesson(diff: DifficultyLevel = 2): Task[] {
+  const ranges: Record<number, { a: [number, number]; b: [number, number] }> = {
+    1: { a: [100, 500], b: [50, 300] },
+    2: { a: [200, 2000], b: [100, 1500] },
+    3: { a: [500, 9999], b: [200, 5000] },
+  };
+  const R = ranges[diff];
+  const add = (a: number, b: number) => a + b;
+  const tasks: Task[] = [];
+
+  const [wa, wb] = [rnd(R.a[0], Math.min(R.a[1], 800)), rnd(R.b[0], Math.min(R.b[1], 500))];
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup", `${wa} + ${wb} = ?`, add(wa, wb), "Складываем большие числа"));
+
+  const [ca, cb] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice", `${ca} + ${cb} = ?`, add(ca, cb), `${ca} + ${cb} = ${add(ca, cb)}`));
+
+  const [ia, ib] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(inputT("✏️", "Ввод", "badge-input", `${ia} + ${ib} = ?`, add(ia, ib), `${ia} + ${ib} = ${add(ia, ib)}`));
+
+  const [ta, tb, tc] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(inputT("✏️", "Ввод", "badge-input", `${ta} + ${tb} + ${tc} = ?`, add(add(ta, tb), tc), `${ta}+${tb}=${add(ta, tb)}, +${tc}=${add(add(ta, tb), tc)}`));
+
+  const [trapVal, shift] = [rnd(R.a[0], Math.min(R.a[1], 500)), rnd(10, 100)];
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    `(${trapVal} + ${shift}) − ${shift} = ?`, trapVal,
+    `Прибавили ${shift}, потом вычли — вернулись к ${trapVal}!`));
+
+  tasks.push(inputT("⭐", "Босс", "badge-boss",
+    `В магазин привезли ${rnd(R.a[0], R.a[1])} тетрадей и ${rnd(R.b[0], R.b[1])}. Продали ${rnd(R.b[0], R.b[1])}. Осталось?`,
+    0, ""));
+  // Fix the boss task with calculated values
+  const [t1, t2, sold] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1]), rnd(R.b[0], Math.min(rnd(R.b[0], R.b[1]) + rnd(R.a[0], R.a[1]) - 1, R.b[1]))];
+  tasks.pop();
+  tasks.push(inputT("⭐", "Босс", "badge-boss",
+    `Привезли ${t1} и ${t2} тетр. Продали ${sold}. Осталось?`,
+    t1 + t2 - sold, `${t1}+${t2}=${t1 + t2}, −${sold}=${t1 + t2 - sold}`));
+
+  return shuffleTasks(tasks);
+}
+
+export function generateColumnMulLesson(diff: DifficultyLevel = 2): Task[] {
+  const ranges: Record<number, { a: [number, number]; b: [number, number] }> = {
+    1: { a: [12, 50], b: [2, 9] },
+    2: { a: [20, 200], b: [3, 12] },
+    3: { a: [100, 999], b: [4, 15] },
+  };
+  const R = ranges[diff];
+  const mul = (a: number, b: number) => a * b;
+  const tasks: Task[] = [];
+
+  const [wa, wb] = [rnd(R.a[0], Math.min(R.a[1], 30)), rnd(R.b[0], Math.min(R.b[1], 6))];
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup", `${wa} × ${wb} = ?`, mul(wa, wb), "Умножаем столбиком"));
+
+  const [ca, cb] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice", `${ca} × ${cb} = ?`, mul(ca, cb), `${ca} × ${cb} = ${mul(ca, cb)}`));
+
+  const [ia, ib] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+  tasks.push(inputT("✏️", "Ввод", "badge-input", `${ia} × ${ib} = ?`, mul(ia, ib), `${ia} × ${ib} = ${mul(ia, ib)}`));
+
+  // Multiply by 10, 100 trap
+  const tn = rnd(10, 50);
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    `${tn} × 100 = ?`, tn * 100,
+    `Умножаем на 100 — просто добавляем два нуля! ${tn} × 100 = ${tn * 100}`));
+
+  if (diff >= 2) {
+    const [ba, bb] = [rnd(R.a[0], R.a[1]), rnd(R.b[0], R.b[1])];
+    tasks.push(inputT("⭐", "Босс", "badge-boss",
+      `${ba} коробок по ${bb} яблок. Сколько всего?`,
+      mul(ba, bb), `${ba} × ${bb} = ${mul(ba, bb)}`));
+  }
+
+  return shuffleTasks(tasks);
+}
+
+export function generateColumnDivLesson(diff: DifficultyLevel = 2): Task[] {
+  const ranges: Record<number, { b: [number, number]; c: [number, number] }> = {
+    1: { b: [2, 5], c: [2, 9] },
+    2: { b: [3, 9], c: [3, 12] },
+    3: { b: [4, 15], c: [5, 20] },
+  };
+  const R = ranges[diff];
+  const tasks: Task[] = [];
+  const p = (): [number, number] => {
+    const b = rnd(R.b[0], R.b[1]);
+    const c = rnd(R.c[0], R.c[1]);
+    return [b * c, b];
+  };
+
+  const [wa, wb] = p();
+  tasks.push(choiceT("🔥", "Разминка", "badge-warmup", `${wa} ÷ ${wb} = ?`, wa / wb, "Делим уголком"));
+
+  const [ca, cb] = p();
+  tasks.push(choiceT("🎯", "Выбор", "badge-choice", `${ca} ÷ ${cb} = ?`, ca / cb, `${ca} ÷ ${cb} = ${ca / cb}`));
+
+  const [ia, ib] = p();
+  tasks.push(inputT("✏️", "Ввод", "badge-input", `${ia} ÷ ${ib} = ?`, ia / ib, `${ia} ÷ ${ib} = ${ia / ib}`));
+
+  // Divide with remainder
+  const [a, b] = [rnd(100, 500), rnd(4, 15)];
+  const quot = Math.floor(a / b);
+  const rem = a - quot * b;
+  tasks.push(inputT("✏️", "Ввод", "badge-input",
+    `${a} ÷ ${b} = ? (целая часть)`, quot,
+    `${a} ÷ ${b} = ${quot} (ост. ${rem})`));
+
+  tasks.push(choiceT("⚠️", "Ловушка", "badge-trap",
+    "1200 ÷ 100 = ? (подсказка: убери два нуля)",
+    12, "1200 ÷ 100 = 12 — просто убираем два нуля!"));
+
+  if (diff >= 2) {
+    const [ba, bb] = [rnd(200, 1000), rnd(4, 15)];
+    const bq = Math.floor(ba / bb);
+    const br = ba - bq * bb;
+    tasks.push(inputT("⭐", "Босс", "badge-boss",
+      `${ba} книг на ${bb} полок. Поровну. Остаток?`,
+      bq, `${ba} ÷ ${bb} = ${bq} (ост. ${br})`));
+  }
+
+  return shuffleTasks(tasks);
+}
+
 // ═══ Registry ═══
 
 export type MathGeneratorId = "add" | "sub" | "mul" | "div" | "eq" | "geom" | "frac"
   | "compare" | "word" | "time" | "units" | "money" | "logic"
-  | "speed" | "charts";
+  | "speed" | "charts" | "column_add" | "column_mul" | "column_div";
 
 const MATH_GENS: Record<MathGeneratorId, (diff: DifficultyLevel) => Task[]> = {
   add: generateAddLesson,
@@ -852,6 +984,9 @@ const MATH_GENS: Record<MathGeneratorId, (diff: DifficultyLevel) => Task[]> = {
   logic: generateLogicLesson,
   speed: generateSpeedLesson,
   charts: generateChartsLesson,
+  column_add: generateColumnAddLesson,
+  column_mul: generateColumnMulLesson,
+  column_div: generateColumnDivLesson,
 };
 
 export function generateMathLesson(generatorId: string, diff: DifficultyLevel = 2): Task[] {

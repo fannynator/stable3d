@@ -11,7 +11,6 @@ export function PaywallModal({ onSubscribe, onClose }: PaywallModalProps) {
   const handleStartTrial = () => {
     // For now: activate trial immediately (no payment)
     startTrial();
-    activateSubscription();
     onSubscribe();
   };
 
