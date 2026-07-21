@@ -28,6 +28,7 @@ import { PrivacyModal, hasAcceptedPrivacy } from "./components/PrivacyModal";
 import { ParentPanel, recordTaskSolved, recordPlayTime, isTimeExceeded, getDailyTimeLimitMs } from "./components/ParentPanel";
 import { RoleScreen, getStoredRole, setStoredRole, type UserRole } from "./components/RoleScreen";
 import { PaywallModal } from "./components/PaywallModal";
+import { Tutorial, hasTutorialDone } from "./components/Tutorial";
 import { getSubscriptionStatus, startTrial } from "./useSubscription";
 
 // Skill tree
@@ -66,7 +67,8 @@ export default function App() {
   const [userRole, setUserRole] = useState<UserRole>(getStoredRole);
   const [subStatus] = useState(getSubscriptionStatus);
   const [taskCount, setTaskCount] = useState(0);
-  const [showPaywall, setShowPaywall] = useState(false); // Only shown from room, not at startup
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(!hasTutorialDone()); // Only shown from room, not at startup
 
   // Session state — 5-question mastery session
   const [session, setSession] = useState<{
@@ -407,6 +409,11 @@ export default function App() {
         onClose={() => setParentOpen(false)}
       />
     );
+  }
+
+  // ── Tutorial (first launch) ──
+  if (showTutorial && userRole === "child") {
+    return <Tutorial onFinish={() => setShowTutorial(false)} />;
   }
 
   // ── Paywall (triggered from cat room) ──
